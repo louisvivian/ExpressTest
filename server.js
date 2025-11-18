@@ -35,6 +35,9 @@ app.get('/', (req, res) => {
 // 使用API路由
 app.use('/api', apiRoutes);
 
+// 导出 Express 应用实例（用于服务器less环境）
+module.exports = app;
+
 // 本地开发环境：启动服务器
 // Vercel 环境：不启动服务器（所有逻辑都在 api/ 目录下的文件中）
 if (!process.env.VERCEL) {

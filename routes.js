@@ -9,7 +9,14 @@ router.get('/users', async (req, res) => {
         res.json(users);
     } catch (error) {
         console.error('获取用户列表失败:', error);
-        res.status(500).json({ error: '获取用户列表失败' });
+        // 检查是否是数据库连接错误
+        if (error.message && error.message.includes('Can\'t reach database server')) {
+            return res.status(503).json({ 
+                error: '数据库连接失败',
+                message: '无法连接到数据库服务器，请检查 DATABASE_URL 环境变量配置'
+            });
+        }
+        res.status(500).json({ error: '获取用户列表失败', details: error.message });
     }
 });
 
@@ -27,7 +34,14 @@ router.get('/users/:id', async (req, res) => {
         res.json(user);
     } catch (error) {
         console.error('获取用户失败:', error);
-        res.status(500).json({ error: '获取用户失败' });
+        // 检查是否是数据库连接错误
+        if (error.message && error.message.includes('Can\'t reach database server')) {
+            return res.status(503).json({ 
+                error: '数据库连接失败',
+                message: '无法连接到数据库服务器，请检查 DATABASE_URL 环境变量配置'
+            });
+        }
+        res.status(500).json({ error: '获取用户失败', details: error.message });
     }
 });
 
@@ -61,7 +75,14 @@ router.post('/users', async (req, res) => {
         res.status(201).json(newUser);
     } catch (error) {
         console.error('创建用户失败:', error);
-        res.status(500).json({ error: '创建用户失败' });
+        // 检查是否是数据库连接错误
+        if (error.message && error.message.includes('Can\'t reach database server')) {
+            return res.status(503).json({ 
+                error: '数据库连接失败',
+                message: '无法连接到数据库服务器，请检查 DATABASE_URL 环境变量配置'
+            });
+        }
+        res.status(500).json({ error: '创建用户失败', details: error.message });
     }
 });
 
@@ -72,7 +93,14 @@ router.get('/infoViews', async (req, res) => {
         res.json(infoViews);
     } catch (error) {
         console.error('获取信息视图列表失败:', error);
-        res.status(500).json({ error: '获取信息视图列表失败' });
+        // 检查是否是数据库连接错误
+        if (error.message && error.message.includes('Can\'t reach database server')) {
+            return res.status(503).json({ 
+                error: '数据库连接失败',
+                message: '无法连接到数据库服务器，请检查 DATABASE_URL 环境变量配置'
+            });
+        }
+        res.status(500).json({ error: '获取信息视图列表失败', details: error.message });
     }
 });
 
