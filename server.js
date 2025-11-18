@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const apiRoutes = require('./routes');
 
 // 中间件：告诉Express处理JSON请求，确保UTF-8编码
@@ -35,7 +35,10 @@ app.get('/', (req, res) => {
 // 使用API路由
 app.use('/api', apiRoutes);
 
-// 启动服务器
-app.listen(PORT, () => {
-  console.log(`API 服务器运行在 http://localhost:${PORT}`);
-});
+// 本地开发环境：启动服务器
+// Vercel 环境：不启动服务器（所有逻辑都在 api/ 目录下的文件中）
+if (!process.env.VERCEL) {
+    app.listen(PORT, () => {
+        console.log(`API 服务器运行在 http://localhost:${PORT}`);
+    });
+}
