@@ -25,7 +25,7 @@ server.use((req, res, next) => {
 });
 
 // 获取所有用户
-server.get('/api/users', async (req, res) => {
+server.get('/users', async (req, res) => {
     try {
         const users = await prisma.user.findMany();
         res.json(users);
@@ -36,7 +36,7 @@ server.get('/api/users', async (req, res) => {
 });
 
 // 获取单个用户
-server.get('/api/users/:id', async (req, res) => {
+server.get('/users/:id', async (req, res) => {
     try {
         const user = await prisma.user.findUnique({
             where: { id: parseInt(req.params.id) }
@@ -54,7 +54,7 @@ server.get('/api/users/:id', async (req, res) => {
 });
 
 // 添加新用户
-server.post('/api/users', async (req, res) => {
+server.post('/users', async (req, res) => {
     try {
         const { name } = req.body;
         
