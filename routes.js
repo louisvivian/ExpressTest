@@ -2,20 +2,86 @@ const express = require('express');
 const router = express.Router();
 const prisma = require('./prisma/client');
 
+// 数据库连接错误处理辅助函数
+function handleDatabaseError(error, res) {
+    console.error('数据库错误:', error);
+    
+    const errorMessage = error.message || '';
+    const errorCode = error.code || '';
+    
+    // 检查是否是数据库连接错误
+    if (errorMessage.includes('Can\'t reach database server') || 
+        errorMessage.includes('P1001') ||
+        errorCode === 'P1001') {
+        return res.status(503).json({ 
+            error: '数据库连接失败',
+            message: '无法连接到数据库服务器',
+            details: {
+                problem: '连接超时或无法访问数据库服务器',
+                possibleCauses: [
+                    'Supabase 项目可能被暂停（免费项目可能因不活跃而暂停）',
+                    '网络连接问题或防火墙阻止',
+                    'DATABASE_URL 配置错误',
+                    '数据库服务器暂时不可用'
+                ],
+                solutions: [
+                    '1. 登录 Supabase 控制台检查项目状态：https://app.supabase.com',
+                    '2. 如果项目被暂停，需要恢复项目',
+                    '3. 检查 .env 文件中的 DATABASE_URL 是否正确',
+                    '4. 运行诊断脚本：node diagnose-db.js',
+                    '5. 检查网络连接和防火墙设置'
+                ]
+            }
+        });
+    }
+    
+    // 认证错误
+    if (errorMessage.includes('authentication failed') || 
+        errorMessage.includes('P1000') ||
+        errorCode === 'P1000') {
+        return res.status(503).json({ 
+            error: '数据库认证失败',
+            message: '数据库用户名或密码错误',
+            details: {
+                problem: '无法使用提供的凭据连接到数据库',
+                solutions: [
+                    '1. 检查 .env 文件中的 DATABASE_URL 密码是否正确',
+                    '2. 在 Supabase 控制台重置数据库密码',
+                    '3. 更新 .env 文件中的 DATABASE_URL'
+                ]
+            }
+        });
+    }
+    
+    // 数据库不存在
+    if (errorMessage.includes('does not exist') || 
+        errorMessage.includes('P1003') ||
+        errorCode === 'P1003') {
+        return res.status(503).json({ 
+            error: '数据库不存在',
+            message: '指定的数据库不存在',
+            details: {
+                problem: 'DATABASE_URL 中指定的数据库名称不存在',
+                solutions: [
+                    '1. 检查 .env 文件中的 DATABASE_URL 数据库名称是否正确',
+                    '2. 在 Supabase 控制台确认数据库名称'
+                ]
+            }
+        });
+    }
+    
+    // 其他数据库错误
+    return null;
+}
+
 // 获取所有用户
 router.get('/users', async (req, res) => {
     try {
         const users = await prisma.user.findMany();
         res.json(users);
     } catch (error) {
-        console.error('获取用户列表失败:', error);
-        // 检查是否是数据库连接错误
-        if (error.message && error.message.includes('Can\'t reach database server')) {
-            return res.status(503).json({ 
-                error: '数据库连接失败',
-                message: '无法连接到数据库服务器，请检查 DATABASE_URL 环境变量配置'
-            });
-        }
+        const dbError = handleDatabaseError(error, res);
+        if (dbError) return;
         res.status(500).json({ error: '获取用户列表失败', details: error.message });
     }
 });
@@ -33,14 +99,8 @@ router.get('/users/:id', async (req, res) => {
 
         res.json(user);
     } catch (error) {
-        console.error('获取用户失败:', error);
-        // 检查是否是数据库连接错误
-        if (error.message && error.message.includes('Can\'t reach database server')) {
-            return res.status(503).json({ 
-                error: '数据库连接失败',
-                message: '无法连接到数据库服务器，请检查 DATABASE_URL 环境变量配置'
-            });
-        }
+        const dbError = handleDatabaseError(error, res);
+        if (dbError) return;
         res.status(500).json({ error: '获取用户失败', details: error.message });
     }
 });
@@ -74,14 +134,8 @@ router.post('/users', async (req, res) => {
         // 5. 返回201状态码（表示创建成功）和新用户数据
         res.status(201).json(newUser);
     } catch (error) {
-        console.error('创建用户失败:', error);
-        // 检查是否是数据库连接错误
-        if (error.message && error.message.includes('Can\'t reach database server')) {
-            return res.status(503).json({ 
-                error: '数据库连接失败',
-                message: '无法连接到数据库服务器，请检查 DATABASE_URL 环境变量配置'
-            });
-        }
+        const dbError = handleDatabaseError(error, res);
+        if (dbError) return;
         res.status(500).json({ error: '创建用户失败', details: error.message });
     }
 });
@@ -92,14 +146,8 @@ router.get('/infoViews', async (req, res) => {
         const infoViews = await prisma.infoView.findMany();
         res.json(infoViews);
     } catch (error) {
-        console.error('获取信息视图列表失败:', error);
-        // 检查是否是数据库连接错误
-        if (error.message && error.message.includes('Can\'t reach database server')) {
-            return res.status(503).json({ 
-                error: '数据库连接失败',
-                message: '无法连接到数据库服务器，请检查 DATABASE_URL 环境变量配置'
-            });
-        }
+        const dbError = handleDatabaseError(error, res);
+        if (dbError) return;
         res.status(500).json({ error: '获取信息视图列表失败', details: error.message });
     }
 });
