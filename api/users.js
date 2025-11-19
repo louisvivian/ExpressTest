@@ -24,8 +24,8 @@ server.use((req, res, next) => {
     next();
 });
 
-// 获取所有用户
-server.get('/users', async (req, res) => {
+// 获取所有用户 - 在 Vercel 中，api/users.js 对应 /api/users 路径
+server.get('/', async (req, res) => {
     try {
         const users = await prisma.user.findMany();
         res.json(users);
@@ -35,26 +35,8 @@ server.get('/users', async (req, res) => {
     }
 });
 
-// 获取单个用户
-server.get('/users/:id', async (req, res) => {
-    try {
-        const user = await prisma.user.findUnique({
-            where: { id: parseInt(req.params.id) }
-        });
-
-        if (!user) {
-            return res.status(404).json({ error: '用户未找到' });
-        }
-
-        res.json(user);
-    } catch (error) {
-        console.error('获取用户失败:', error);
-        res.status(500).json({ error: '获取用户失败' });
-    }
-});
-
 // 添加新用户
-server.post('/users', async (req, res) => {
+server.post('/', async (req, res) => {
     try {
         const { name } = req.body;
         
