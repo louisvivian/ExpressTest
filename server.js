@@ -3,6 +3,7 @@ const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const apiRoutes = require('./routes');
+const { disconnectPrisma } = require('./prisma/client');
 
 // 中间件：告诉Express处理JSON请求，确保UTF-8编码
 app.use(express.json({ 
@@ -46,8 +47,11 @@ if (!process.env.VERCEL) {
     });
 
     // 优雅关闭函数
-    const gracefulShutdown = (signal) => {
+    const gracefulShutdown = async (signal) => {
         console.log(`\n收到 ${signal} 信号，正在关闭服务器...`);
+        
+        // 先关闭数据库连接
+        await disconnectPrisma();
         
         // 停止接受新连接
         server.close(() => {
@@ -57,7 +61,7 @@ if (!process.env.VERCEL) {
         // 强制关闭所有现有连接
         server.closeAllConnections && server.closeAllConnections();
         
-        // 立即退出进程
+        // 延迟退出进程，确保所有资源都已释放
         setTimeout(() => {
             console.log('进程已退出');
             process.exit(0);

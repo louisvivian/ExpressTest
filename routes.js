@@ -1,6 +1,28 @@
 const express = require('express');
 const router = express.Router();
-const prisma = require('./prisma/client');
+let prisma = require('./prisma/client');
+const { handlePreparedStatementError } = require('./prisma/client');
+
+// 包装 Prisma 操作，自动处理 prepared statement 错误
+async function executeWithRetry(prismaOperation) {
+    try {
+        return await prismaOperation();
+    } catch (error) {
+        // 检查是否是 prepared statement 错误
+        if (error.message && error.message.includes('prepared statement') && error.message.includes('already exists')) {
+            try {
+                // 重新创建 Prisma Client 连接
+                prisma = await handlePreparedStatementError();
+                // 重试操作
+                return await prismaOperation();
+            } catch (retryError) {
+                console.error('重试失败:', retryError);
+                throw retryError;
+            }
+        }
+        throw error;
+    }
+}
 
 // 数据库连接错误处理辅助函数
 function handleDatabaseError(error, res) {
@@ -77,7 +99,7 @@ function handleDatabaseError(error, res) {
 // 获取所有用户
 router.get('/users', async (req, res) => {
     try {
-        const users = await prisma.user.findMany();
+        const users = await executeWithRetry(() => prisma.user.findMany());
         res.json(users);
     } catch (error) {
         const dbError = handleDatabaseError(error, res);
@@ -89,9 +111,11 @@ router.get('/users', async (req, res) => {
 // 获取单个用户
 router.get('/users/:id', async (req, res) => {
     try {
-        const user = await prisma.user.findUnique({
-            where: { id: parseInt(req.params.id) }
-        });
+        const user = await executeWithRetry(() => 
+            prisma.user.findUnique({
+                where: { id: parseInt(req.params.id) }
+            })
+        );
 
         if (!user) {
             return res.status(404).json({ error: '用户未找到' });
@@ -125,9 +149,11 @@ router.post('/users', async (req, res) => {
         const nameUtf8 = typeof name === 'string' ? name : String(name);
 
         // 4. 创建新用户
-        const newUser = await prisma.user.create({
-            data: { name: nameUtf8 }
-        });
+        const newUser = await executeWithRetry(() => 
+            prisma.user.create({
+                data: { name: nameUtf8 }
+            })
+        );
         
         console.log('创建的用户:', JSON.stringify(newUser));
 
@@ -143,7 +169,7 @@ router.post('/users', async (req, res) => {
 // 获取信息视图列表
 router.get('/infoViews', async (req, res) => {
     try {
-        const infoViews = await prisma.infoView.findMany();
+        const infoViews = await executeWithRetry(() => prisma.infoView.findMany());
         res.json(infoViews);
     } catch (error) {
         const dbError = handleDatabaseError(error, res);
