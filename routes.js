@@ -130,11 +130,46 @@ function handleDatabaseError(error, res) {
     return null;
 }
 
-// 获取所有用户
+// 获取所有用户（支持分页）
 router.get('/users', async (req, res) => {
     try {
-        const users = await executeWithRetry((p) => p.user.findMany());
-        res.json(users);
+        // 获取分页参数
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        
+        // 验证参数
+        const pageNum = Math.max(1, page);
+        const limitNum = Math.max(1, Math.min(100, limit)); // 限制每页最多100条
+        const skip = (pageNum - 1) * limitNum;
+
+        // 并行查询用户列表和总数
+        const [users, total] = await Promise.all([
+            executeWithRetry((p) => 
+                p.user.findMany({
+                    skip: skip,
+                    take: limitNum,
+                    orderBy: {
+                        createdAt: 'desc' // 按创建时间倒序
+                    }
+                })
+            ),
+            executeWithRetry((p) => p.user.count())
+        ]);
+
+        const totalPages = Math.ceil(total / limitNum);
+
+        // 返回分页结果
+        res.json({
+            data: users,
+            pagination: {
+                page: pageNum,
+                limit: limitNum,
+                total: total,
+                totalPages: totalPages,
+                hasNext: pageNum < totalPages,
+                hasPrev: pageNum > 1
+            }
+        });
     } catch (error) {
         const dbError = handleDatabaseError(error, res);
         if (dbError) return;
@@ -197,6 +232,47 @@ router.post('/users', async (req, res) => {
         const dbError = handleDatabaseError(error, res);
         if (dbError) return;
         res.status(500).json({ error: '创建用户失败', details: error.message });
+    }
+});
+
+// 删除用户
+router.delete('/users/:id', async (req, res) => {
+    try {
+        const userId = parseInt(req.params.id);
+
+        if (isNaN(userId)) {
+            return res.status(400).json({ error: '无效的用户ID' });
+        }
+
+        // 先检查用户是否存在
+        const user = await executeWithRetry((p) => 
+            p.user.findUnique({
+                where: { id: userId }
+            })
+        );
+
+        if (!user) {
+            return res.status(404).json({ error: '用户未找到' });
+        }
+
+        // 删除用户
+        await executeWithRetry((p) => 
+            p.user.delete({
+                where: { id: userId }
+            })
+        );
+
+        console.log(`用户 ID ${userId} 已删除`);
+
+        res.status(200).json({ 
+            message: '用户删除成功',
+            deletedUser: user
+        });
+    } catch (error) {
+        const dbError = handleDatabaseError(error, res);
+        if (dbError) return;
+        console.error('删除用户失败:', error);
+        res.status(500).json({ error: '删除用户失败', details: error.message });
     }
 });
 

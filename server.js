@@ -1,5 +1,6 @@
 require('dotenv').config({ debug: true });
 const express = require('express');
+const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const apiRoutes = require('./routes');
@@ -17,8 +18,8 @@ app.use(express.urlencoded({
     charset: 'utf-8'
 }));
 
-// 设置请求和响应头，确保UTF-8编码
-app.use((req, res, next) => {
+// 设置请求和响应头，确保UTF-8编码（仅对API请求）
+app.use('/api', (req, res, next) => {
     // 设置响应头
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     // 确保请求体使用 UTF-8 编码
@@ -28,13 +29,16 @@ app.use((req, res, next) => {
     next();
 });
 
-// 测试路由：欢迎页面
-app.get('/', (req, res) => {
-  res.send('欢迎使用我的API！');
-});
-
-// 使用API路由
+// 使用API路由（在静态文件之前）
 app.use('/api', apiRoutes);
+
+// 提供静态文件服务
+app.use(express.static(path.join(__dirname, 'public')));
+
+// 根路由：提供前端页面
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // 导出 Express 应用实例（用于服务器less环境）
 module.exports = app;
