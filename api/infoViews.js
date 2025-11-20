@@ -1,38 +1,21 @@
 require('dotenv').config();
-const express = require('express');
-const server = express();
 const prisma = require('../prisma/client');
+const { createExpressMiddleware } = require('../utils/middleware');
+const { handleDatabaseError } = require('../utils/dbErrorHandler');
 
-// 中间件
-server.use(express.json({ 
-    limit: '10mb',
-    type: 'application/json',
-    charset: 'utf-8'
-}));
-server.use(express.urlencoded({ 
-    extended: true, 
-    limit: '10mb',
-    charset: 'utf-8'
-}));
-
-// 设置请求和响应头，确保UTF-8编码
-server.use((req, res, next) => {
-    res.setHeader('Content-Type', 'application/json; charset=utf-8');
-    if (req.headers['content-type']) {
-        req.headers['content-type'] = req.headers['content-type'].replace(/charset=[^;]*/, 'charset=utf-8');
-    }
-    next();
-});
+// 创建 Express 服务器并配置中间件
+const server = createExpressMiddleware();
 
 // 获取信息视图列表
 server.get('/api/infoViews', async (req, res) => {
     try {
-        // 使用带重试的查询函数来处理 prepared statement 错误
         const infoViews = await prisma.executeWithRetry((p) => p.infoView.findMany());
         res.json(infoViews);
     } catch (error) {
+        const dbError = handleDatabaseError(error, res);
+        if (dbError) return;
         console.error('获取信息视图列表失败:', error);
-        res.status(500).json({ error: '获取信息视图列表失败' });
+        res.status(500).json({ error: '获取信息视图列表失败', details: error.message });
     }
 });
 
