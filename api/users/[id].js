@@ -25,8 +25,8 @@ server.use((req, res, next) => {
 });
 
 // 获取单个用户 - 在 Vercel 中，api/users/[id].js 对应 /api/users/:id 路径
-// 使用通配符路由来捕获所有请求
-server.get('*', async (req, res) => {
+// 使用根路径路由来处理请求
+server.get('/', async (req, res) => {
     try {
         // 从 URL 路径中解析 id
         // req.url 在 Vercel 中可能是 '/api/users/4' 或 '/4'
