@@ -27,7 +27,8 @@ server.use((req, res, next) => {
 // 获取信息视图列表
 server.get('/api/infoViews', async (req, res) => {
     try {
-        const infoViews = await prisma.infoView.findMany();
+        // 使用带重试的查询函数来处理 prepared statement 错误
+        const infoViews = await prisma.executeWithRetry((p) => p.infoView.findMany());
         res.json(infoViews);
     } catch (error) {
         console.error('获取信息视图列表失败:', error);

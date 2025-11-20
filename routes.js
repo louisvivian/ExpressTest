@@ -1,62 +1,9 @@
 const express = require('express');
 const router = express.Router();
-let prisma = require('./prisma/client');
-const { handlePreparedStatementError, createNewPrismaClient } = require('./prisma/client');
+const prisma = require('./prisma/client');
 
-// 包装 Prisma 操作，自动处理 prepared statement 错误
-// prismaOperation 应该是一个函数工厂，返回 Prisma 操作 Promise
-async function executeWithRetry(prismaOperationFactory) {
-    let retryCount = 0;
-    const maxRetries = 2;
-    
-    while (retryCount <= maxRetries) {
-        try {
-            // 使用单例 Prisma Client 实例（推荐做法）
-            // Prisma Client 会自动管理连接池，无需手动连接/断开
-            const result = await prismaOperationFactory(prisma);
-            return result;
-        } catch (error) {
-            // 检查是否是 prepared statement 错误
-            const errorMessage = error.message || '';
-            const errorCode = error.code || '';
-            const isPreparedStatementError = 
-                (errorMessage.includes('prepared statement') && errorMessage.includes('already exists')) ||
-                errorCode === '42P05';
-            
-            // 如果是 prepared statement 错误，尝试重置 Prisma Client 实例并重试
-            if (isPreparedStatementError && retryCount < maxRetries) {
-                retryCount++;
-                console.log(`检测到 prepared statement 错误，正在重置 Prisma Client... (重试 ${retryCount}/${maxRetries})`);
-                
-                try {
-                    // 使用 handlePreparedStatementError 函数完全重置实例
-                    const { handlePreparedStatementError } = require('./prisma/client');
-                    const newPrisma = await handlePreparedStatementError();
-                    
-                    // 更新 routes.js 中的 prisma 引用
-                    prisma = newPrisma;
-                    
-                    // 等待更长时间确保连接完全重置
-                    await new Promise(resolve => setTimeout(resolve, 300));
-                    
-                    // 继续循环重试
-                    continue;
-                } catch (resetError) {
-                    console.error('重置 Prisma Client 失败:', resetError);
-                    // 如果重置失败，等待后继续重试
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                    continue;
-                }
-            } else {
-                // 不是 prepared statement 错误，或者重试次数已用完，直接抛出
-                throw error;
-            }
-        }
-    }
-    
-    // 理论上不会到达这里，但为了类型安全
-    throw new Error('执行失败：重试次数已用完');
-}
+// 使用统一的 executeWithRetry 函数（从 prisma/client.js 导出）
+const executeWithRetry = prisma.executeWithRetry;
 
 // 数据库连接错误处理辅助函数
 function handleDatabaseError(error, res) {

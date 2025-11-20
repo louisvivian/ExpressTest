@@ -58,9 +58,12 @@ server.get('/', async (req, res) => {
             return res.status(400).json({ error: '无效的用户ID参数' });
         }
 
-        const user = await prisma.user.findUnique({
-            where: { id: parseInt(id) }
-        });
+        // 使用带重试的查询函数来处理 prepared statement 错误
+        const user = await prisma.executeWithRetry((p) => 
+            p.user.findUnique({
+                where: { id: parseInt(id) }
+            })
+        );
 
         if (!user) {
             return res.status(404).json({ error: '用户未找到' });

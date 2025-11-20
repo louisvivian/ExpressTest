@@ -9,8 +9,11 @@ function getPrismaClient() {
   if (!prismaInstance) {
     let databaseUrl = process.env.DATABASE_URL;
     
-    // 在开发环境中，修改 DATABASE_URL 以避免 prepared statement 冲突
-    if (process.env.NODE_ENV !== 'production' && databaseUrl) {
+    // 检查是否在 Vercel 环境中（serverless 环境）
+    const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
+    const isServerless = isVercel || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NETLIFY;
+    
+    if (databaseUrl) {
       // 检查 URL 是否已经有查询参数
       const hasParams = databaseUrl.includes('?');
       let separator = hasParams ? '&' : '?';
@@ -21,23 +24,41 @@ function getPrismaClient() {
       if (isSupabasePooler) {
         // Supabase 连接池：添加 pgbouncer 参数
         // 注意：Supabase 连接池使用事务模式，不支持 prepared statements
-        if (!databaseUrl.includes('pgbouncer')) {
+        if (!databaseUrl.includes('pgbouncer=true')) {
           databaseUrl = `${databaseUrl}${separator}pgbouncer=true`;
           separator = '&';
         }
         console.warn('⚠️  检测到 Supabase 连接池。如果遇到 prepared statement 错误，请考虑使用直接连接（db.supabase.com）');
       }
       
-      // 添加连接超时参数
-      if (!databaseUrl.includes('connect_timeout')) {
-        databaseUrl = `${databaseUrl}${separator}connect_timeout=10`;
-        separator = '&';
-      }
-      
-      // 添加连接池大小限制（避免连接过多）
-      if (!databaseUrl.includes('connection_limit')) {
-        databaseUrl = `${databaseUrl}${separator}connection_limit=10`;
-        separator = '&';
+      // 在 serverless 环境中，建议使用较小的连接池
+      if (isServerless) {
+        // 添加连接池大小限制（serverless 环境建议使用较小的值）
+        if (!databaseUrl.includes('connection_limit')) {
+          databaseUrl = `${databaseUrl}${separator}connection_limit=1`;
+          separator = '&';
+        }
+        // 添加连接超时参数
+        if (!databaseUrl.includes('connect_timeout')) {
+          databaseUrl = `${databaseUrl}${separator}connect_timeout=10`;
+          separator = '&';
+        }
+        // 添加池超时参数
+        if (!databaseUrl.includes('pool_timeout')) {
+          databaseUrl = `${databaseUrl}${separator}pool_timeout=10`;
+          separator = '&';
+        }
+      } else {
+        // 非 serverless 环境：添加连接超时参数
+        if (!databaseUrl.includes('connect_timeout')) {
+          databaseUrl = `${databaseUrl}${separator}connect_timeout=10`;
+          separator = '&';
+        }
+        // 添加连接池大小限制（避免连接过多）
+        if (!databaseUrl.includes('connection_limit')) {
+          databaseUrl = `${databaseUrl}${separator}connection_limit=10`;
+          separator = '&';
+        }
       }
     }
     
@@ -92,12 +113,59 @@ async function handlePreparedStatementError() {
     
     // 重新连接
     await newPrisma.$connect();
-    console.log('已重新创建 Prisma Client 连接');
+    console.log('已重新创建 Prisma Client 连接（prepared statement 错误恢复）');
     return newPrisma;
   } catch (error) {
     console.error('重新创建 Prisma Client 时出错:', error);
     throw error;
   }
+}
+
+// 带重试的查询执行函数（用于处理 prepared statement 错误）
+async function executeWithRetry(queryFn, maxRetries = 1) {
+  let lastError;
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const prisma = getPrismaClient();
+      return await queryFn(prisma);
+    } catch (error) {
+      lastError = error;
+      
+      // 检查是否是 prepared statement 错误
+      // Prisma 错误可能嵌套在 error.kind.QueryError.PostgresError 中
+      const errorMessage = error.message || '';
+      const errorCode = error.code || '';
+      
+      // 检查嵌套的错误结构（Prisma ConnectorError）
+      let nestedErrorCode = '';
+      let nestedErrorMessage = '';
+      if (error.kind && error.kind.QueryError && error.kind.QueryError.PostgresError) {
+        nestedErrorCode = error.kind.QueryError.PostgresError.code || '';
+        nestedErrorMessage = error.kind.QueryError.PostgresError.message || '';
+      }
+      
+      const isPreparedStatementError = 
+        errorMessage.includes('prepared statement') ||
+        errorMessage.includes('does not exist') ||
+        nestedErrorMessage.includes('prepared statement') ||
+        nestedErrorMessage.includes('does not exist') ||
+        errorCode === '26000' ||
+        nestedErrorCode === '26000';
+      
+      if (isPreparedStatementError && attempt < maxRetries) {
+        console.warn(`Prepared statement 错误 (code: ${nestedErrorCode || errorCode})，尝试重新连接 (${attempt + 1}/${maxRetries + 1})`);
+        await handlePreparedStatementError();
+        // 继续重试
+        continue;
+      }
+      
+      // 如果不是 prepared statement 错误，或者已经重试完毕，抛出错误
+      throw error;
+    }
+  }
+  
+  throw lastError;
 }
 
 // 预连接数据库函数（导出供 server.js 使用）
@@ -131,4 +199,5 @@ module.exports.connectPrisma = connectPrisma;
 module.exports.disconnectPrisma = disconnectPrisma;
 module.exports.handlePreparedStatementError = handlePreparedStatementError;
 module.exports.createNewPrismaClient = createNewPrismaClient;
+module.exports.executeWithRetry = executeWithRetry;
 

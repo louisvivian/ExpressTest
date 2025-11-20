@@ -97,7 +97,8 @@ function handleDatabaseError(error, res) {
 // 获取所有用户 - 在 Vercel 中，api/users.js 对应 /api/users 路径
 server.get('/', async (req, res) => {
     try {
-        const users = await prisma.user.findMany();
+        // 使用带重试的查询函数来处理 prepared statement 错误
+        const users = await prisma.executeWithRetry((p) => p.user.findMany());
         res.json(users);
     } catch (error) {
         const dbError = handleDatabaseError(error, res);
@@ -126,9 +127,12 @@ server.post('/', async (req, res) => {
 
         const nameUtf8 = typeof name === 'string' ? name : String(name);
 
-        const newUser = await prisma.user.create({
-            data: { name: nameUtf8 }
-        });
+        // 使用带重试的查询函数来处理 prepared statement 错误
+        const newUser = await prisma.executeWithRetry((p) => 
+            p.user.create({
+                data: { name: nameUtf8 }
+            })
+        );
         
         console.log('创建的用户:', JSON.stringify(newUser));
 
