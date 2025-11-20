@@ -18,8 +18,12 @@ app.use(express.urlencoded({
     charset: 'utf-8'
 }));
 
-// 设置请求和响应头，确保UTF-8编码（仅对API请求）
+// 设置请求和响应头，确保UTF-8编码（仅对API请求，排除文件上传）
 app.use('/api', (req, res, next) => {
+    // 如果是文件上传请求，不设置Content-Type，让multer处理
+    if (req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data')) {
+        return next();
+    }
     // 设置响应头
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     // 确保请求体使用 UTF-8 编码

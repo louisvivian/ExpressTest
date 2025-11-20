@@ -4,3 +4,6 @@ node_modules
 .env*
 
 /generated/prisma
+
+# Export files directory
+exports/

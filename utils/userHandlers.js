@@ -8,16 +8,28 @@ async function getUsersList(req, res, prisma) {
         // 获取分页参数
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
+        // 获取搜索参数
+        const searchName = req.query.name ? req.query.name.trim() : null;
         
         // 验证参数
         const pageNum = Math.max(1, page);
         const limitNum = Math.max(1, Math.min(100, limit)); // 限制每页最多100条
         const skip = (pageNum - 1) * limitNum;
 
+        // 构建查询条件
+        const where = {};
+        if (searchName) {
+            where.name = {
+                contains: searchName,
+                mode: 'insensitive' // 不区分大小写（如果数据库支持）
+            };
+        }
+
         // 并行查询用户列表和总数
         const [users, total] = await Promise.all([
             prisma.executeWithRetry((p) => 
                 p.user.findMany({
+                    where: where,
                     skip: skip,
                     take: limitNum,
                     orderBy: {
@@ -25,7 +37,7 @@ async function getUsersList(req, res, prisma) {
                     }
                 })
             ),
-            prisma.executeWithRetry((p) => p.user.count())
+            prisma.executeWithRetry((p) => p.user.count({ where: where }))
         ]);
 
         const totalPages = Math.ceil(total / limitNum);

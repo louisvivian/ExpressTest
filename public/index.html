@@ -85,6 +85,247 @@
             gap: 15px;
         }
 
+        .search-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            max-width: 400px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .search-input::placeholder {
+            color: #888;
+        }
+
+        .search-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .clear-search-btn {
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #b0b0b0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .clear-search-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #e0e0e0;
+        }
+
+        .export-container {
+            display: flex;
+            align-items: center;
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .export-container:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.6);
+        }
+
+        .export-btn {
+            padding: 12px 20px;
+            background: transparent;
+            color: white;
+            border: none;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .export-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .export-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .export-container:hover .export-btn:disabled {
+            transform: none;
+        }
+
+        .export-format-select {
+            padding: 12px 35px 12px 15px;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            min-width: 100px;
+            position: relative;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Cpath fill='%23ffffff' d='M7 10L2 5h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 14px 14px;
+        }
+
+        .export-format-select:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .export-format-select:focus {
+            outline: none;
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .export-format-select option {
+            background: rgba(30, 30, 50, 0.95);
+            color: #e0e0e0;
+            padding: 12px 15px;
+            font-weight: 500;
+        }
+
+        .export-format-select option:hover,
+        .export-format-select option:checked,
+        .export-format-select option:focus {
+            background: rgba(76, 175, 80, 0.3);
+            color: #ffffff;
+        }
+
+        .export-container:has(.export-btn:disabled) {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .progress-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .progress-modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: slideIn 0.3s ease;
+        }
+
+        .progress-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .progress-header h2 {
+            color: #667eea;
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+
+        .progress-info {
+            color: #b0b0b0;
+            font-size: 0.95em;
+            margin-bottom: 20px;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .progress-text {
+            text-align: center;
+            color: #b0b0b0;
+            font-size: 0.95em;
+        }
+
+        .progress-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .progress-actions button {
+            flex: 1;
+        }
+
         .btn {
             padding: 12px 30px;
             border: none;
@@ -565,8 +806,24 @@
         </div>
 
         <div class="actions">
-            <button class="btn btn-primary" onclick="openAddModal()">+ 新增用户</button>
-            <button class="btn btn-secondary" onclick="loadUsers()">🔄 刷新列表</button>
+            <div class="search-container">
+                <input type="text" id="searchInput" class="search-input" placeholder="搜索用户名称..." onkeypress="handleSearchKeyPress(event)">
+                <button class="search-btn" onclick="performSearch()">🔍 搜索</button>
+                <button class="clear-search-btn" id="clearSearchBtn" onclick="clearSearch()" style="display: none;">清除</button>
+            </div>
+            <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                <div class="export-container">
+                    <button class="export-btn" onclick="startExport()">📥 导出</button>
+                    <select id="exportFormat" class="export-format-select">
+                        <option value="json">JSON</option>
+                        <option value="excel">Excel</option>
+                        <option value="csv">CSV</option>
+                    </select>
+                </div>
+                <button class="btn" onclick="openImportModal()" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);">📤 导入</button>
+                <button class="btn btn-primary" onclick="openAddModal()">+ 新增用户</button>
+                <button class="btn btn-secondary" onclick="loadUsers()">🔄 刷新列表</button>
+            </div>
         </div>
 
         <div id="message"></div>
@@ -630,6 +887,84 @@
         </div>
     </div>
 
+    <!-- 导出进度模态框 -->
+    <div id="exportProgressModal" class="progress-modal">
+        <div class="progress-modal-content">
+            <div class="progress-header">
+                <h2>正在导出数据</h2>
+                <div class="progress-info" id="exportProgressInfo">准备中...</div>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="exportProgressBar" style="width: 0%;">0%</div>
+            </div>
+            <div class="progress-text" id="exportProgressText">0 / 0 条记录</div>
+            <div class="progress-actions" id="exportProgressActions" style="display: none;">
+                <button class="btn btn-secondary" onclick="closeExportProgressModal()">关闭</button>
+                <button class="btn btn-primary" id="downloadExportBtn" onclick="downloadExportFile()" style="display: none;">下载文件</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 导入模态框 -->
+    <div id="importModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2>导入用户数据</h2>
+                <button class="close-btn" onclick="closeImportModal()">&times;</button>
+            </div>
+            <div style="padding: 20px 0;">
+                <div class="form-group">
+                    <label>选择文件格式</label>
+                    <select id="importFormat" class="export-format-select" style="width: 100%;">
+                        <option value="json">JSON</option>
+                        <option value="excel">Excel</option>
+                        <option value="csv">CSV</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>选择文件</label>
+                    <input type="file" id="importFileInput" accept=".json,.csv,.xlsx,.xls" style="display: none;" onchange="handleFileSelect(event)">
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button class="btn btn-primary" onclick="document.getElementById('importFileInput').click()" style="flex: 1;">选择文件</button>
+                        <button class="btn" onclick="downloadImportTemplate()" style="background: rgba(102, 126, 234, 0.2); border: 1px solid rgba(102, 126, 234, 0.5); color: #667eea;">📋 下载模板</button>
+                    </div>
+                    <div id="selectedFileName" style="margin-top: 10px; color: #b0b0b0; font-size: 0.9em; display: none; padding: 8px; background: rgba(76, 175, 80, 0.1); border-radius: 6px; border-left: 3px solid #4caf50;"></div>
+                </div>
+                <div id="importModalMessage" style="display: none;"></div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button class="btn btn-secondary" onclick="closeImportModal()" style="flex: 1;">取消</button>
+                    <button class="btn btn-primary" id="startImportBtn" onclick="startImportFromModal()" style="flex: 1;" disabled>开始导入</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 导入进度模态框 -->
+    <div id="importProgressModal" class="progress-modal">
+        <div class="progress-modal-content">
+            <div class="progress-header">
+                <h2>正在导入数据</h2>
+                <div class="progress-info" id="importProgressInfo">准备中...</div>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="importProgressBar" style="width: 0%;">0%</div>
+            </div>
+            <div class="progress-text" id="importProgressText">0 / 0 条记录</div>
+            <div id="importResultInfo" style="margin-top: 15px; color: #b0b0b0; font-size: 0.9em; display: none;">
+                <div id="importSuccessInfo" style="color: #4caf50; margin-bottom: 5px;"></div>
+                <div id="importFailedInfo" style="color: #f5576c; margin-bottom: 5px;"></div>
+            </div>
+            <div id="importErrors" style="max-height: 150px; overflow-y: auto; margin-top: 10px; display: none;">
+                <div style="font-size: 0.85em; color: #f5576c;">
+                    <div id="importErrorsList"></div>
+                </div>
+            </div>
+            <div class="progress-actions" id="importProgressActions" style="display: none;">
+                <button class="btn btn-secondary" onclick="closeImportProgressModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 删除确认模态框 -->
     <div id="deleteModal" class="modal">
         <div class="modal-content">
@@ -659,6 +994,15 @@
         let currentPage = 1;
         let pageSize = 10;
         let pagination = null;
+        let searchName = ''; // 搜索关键词
+        
+        // 导出状态
+        let currentExportTaskId = null;
+        let exportProgressInterval = null;
+        
+        // 导入状态
+        let currentImportTaskId = null;
+        let importProgressInterval = null;
 
         // 页面加载时获取用户列表
         document.addEventListener('DOMContentLoaded', () => {
@@ -671,14 +1015,23 @@
             loadUsers();
         });
 
-        // 加载用户列表（支持分页）
+        // 加载用户列表（支持分页和搜索）
         async function loadUsers(page = currentPage, limit = pageSize) {
             const container = document.getElementById('usersContainer');
             const paginationContainer = document.getElementById('paginationContainer');
             container.innerHTML = '<div class="loading">加载中...</div>';
 
             try {
-                const response = await fetch(`${API_BASE}?page=${page}&limit=${limit}`);
+                // 构建查询参数
+                const params = new URLSearchParams({
+                    page: page,
+                    limit: limit
+                });
+                if (searchName) {
+                    params.append('name', searchName);
+                }
+                
+                const response = await fetch(`${API_BASE}?${params.toString()}`);
                 if (!response.ok) {
                     throw new Error('获取用户列表失败');
                 }
@@ -697,8 +1050,8 @@
                                 <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
                                 <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                             </svg>
-                            <h3>暂无用户</h3>
-                            <p>点击"新增用户"按钮添加第一个用户</p>
+                            <h3>${searchName ? '未找到匹配的用户' : '暂无用户'}</h3>
+                            <p>${searchName ? '请尝试其他搜索关键词' : '点击"新增用户"按钮添加第一个用户'}</p>
                         </div>
                     `;
                     paginationContainer.style.display = 'none';
@@ -808,6 +1161,36 @@
                 const page = parseInt(event.target.value);
                 goToPage(page);
             }
+        }
+
+        // 处理搜索框回车事件
+        function handleSearchKeyPress(event) {
+            if (event.key === 'Enter') {
+                performSearch();
+            }
+        }
+
+        // 执行搜索
+        function performSearch() {
+            const searchInput = document.getElementById('searchInput');
+            searchName = searchInput.value.trim();
+            currentPage = 1; // 搜索时重置到第一页
+            loadUsers(currentPage, pageSize);
+            // 显示清除按钮
+            if (searchName) {
+                document.getElementById('clearSearchBtn').style.display = 'block';
+            } else {
+                document.getElementById('clearSearchBtn').style.display = 'none';
+            }
+        }
+
+        // 清除搜索
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            searchName = '';
+            currentPage = 1; // 清除搜索时重置到第一页
+            loadUsers(currentPage, pageSize);
+            document.getElementById('clearSearchBtn').style.display = 'none';
         }
 
         // 打开新增用户模态框
@@ -976,11 +1359,589 @@
             }
         }
 
+        // 导出功能
+        async function startExport() {
+            const format = document.getElementById('exportFormat').value;
+            const exportBtn = document.querySelector('.export-btn');
+            
+            try {
+                exportBtn.disabled = true;
+                
+                // 创建导出任务
+                const response = await fetch('/api/export', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        format: format,
+                        name: searchName || null
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || '创建导出任务失败');
+                }
+
+                const result = await response.json();
+                currentExportTaskId = result.taskId;
+                
+                // 显示进度模态框
+                openExportProgressModal();
+                
+                // 开始轮询任务状态
+                startPollingExportProgress();
+            } catch (error) {
+                showMessage(`❌ ${error.message}`, 'error');
+                exportBtn.disabled = false;
+            }
+        }
+
+        function openExportProgressModal() {
+            document.getElementById('exportProgressModal').style.display = 'block';
+            document.getElementById('exportProgressInfo').textContent = '正在准备导出...';
+            document.getElementById('exportProgressBar').style.width = '0%';
+            document.getElementById('exportProgressBar').textContent = '0%';
+            document.getElementById('exportProgressText').textContent = '0 / 0 条记录';
+            document.getElementById('exportProgressActions').style.display = 'none';
+            document.getElementById('downloadExportBtn').style.display = 'none';
+        }
+
+        function closeExportProgressModal() {
+            document.getElementById('exportProgressModal').style.display = 'none';
+            if (exportProgressInterval) {
+                clearInterval(exportProgressInterval);
+                exportProgressInterval = null;
+            }
+            currentExportTaskId = null;
+            document.querySelector('.export-btn').disabled = false;
+        }
+
+        function startPollingExportProgress() {
+            if (exportProgressInterval) {
+                clearInterval(exportProgressInterval);
+            }
+
+            exportProgressInterval = setInterval(async () => {
+                if (!currentExportTaskId) {
+                    clearInterval(exportProgressInterval);
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/api/export/${currentExportTaskId}/status`);
+                    if (!response.ok) {
+                        throw new Error('查询任务状态失败');
+                    }
+
+                    const task = await response.json();
+                    
+                    // 更新进度条
+                    const progressBar = document.getElementById('exportProgressBar');
+                    const progressText = document.getElementById('exportProgressText');
+                    const progressInfo = document.getElementById('exportProgressInfo');
+                    
+                    progressBar.style.width = `${task.progress}%`;
+                    progressBar.textContent = `${task.progress}%`;
+                    
+                    if (task.totalRecords > 0) {
+                        progressText.textContent = `${task.processedRecords} / ${task.totalRecords} 条记录`;
+                    }
+
+                    // 根据任务状态更新UI
+                    if (task.status === 'completed') {
+                        clearInterval(exportProgressInterval);
+                        progressInfo.textContent = '导出完成！';
+                        document.getElementById('exportProgressActions').style.display = 'flex';
+                        document.getElementById('downloadExportBtn').style.display = 'block';
+                        document.querySelector('.export-btn').disabled = false;
+                    } else if (task.status === 'failed') {
+                        clearInterval(exportProgressInterval);
+                        progressInfo.textContent = `导出失败: ${task.error || '未知错误'}`;
+                        document.getElementById('exportProgressActions').style.display = 'flex';
+                        document.querySelector('.export-btn').disabled = false;
+                    } else if (task.status === 'processing') {
+                        progressInfo.textContent = '正在导出数据...';
+                    } else {
+                        progressInfo.textContent = '准备中...';
+                    }
+                } catch (error) {
+                    console.error('查询导出进度失败:', error);
+                    clearInterval(exportProgressInterval);
+                    document.getElementById('exportProgressInfo').textContent = `查询进度失败: ${error.message}`;
+                    document.getElementById('exportProgressActions').style.display = 'flex';
+                    document.querySelector('.export-btn').disabled = false;
+                }
+            }, 500); // 每500ms轮询一次
+        }
+
+        async function downloadExportFile() {
+            if (!currentExportTaskId) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/export/${currentExportTaskId}/download`);
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || '下载文件失败');
+                }
+
+                // 获取文件名
+                const contentDisposition = response.headers.get('Content-Disposition');
+                let fileName = 'export';
+                if (contentDisposition) {
+                    const matches = contentDisposition.match(/filename="(.+)"/);
+                    if (matches) {
+                        fileName = decodeURIComponent(matches[1]);
+                    }
+                }
+
+                // 创建下载链接
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+
+                showMessage('✅ 文件下载成功！', 'success');
+                closeExportProgressModal();
+            } catch (error) {
+                showMessage(`❌ ${error.message}`, 'error');
+            }
+        }
+
+        // 导入模态框功能
+        let selectedImportFile = null;
+
+        function openImportModal() {
+            document.getElementById('importModal').style.display = 'block';
+            resetImportModal();
+        }
+
+        function closeImportModal() {
+            document.getElementById('importModal').style.display = 'none';
+            resetImportModal();
+        }
+
+        function resetImportModal() {
+            selectedImportFile = null;
+            const fileInput = document.getElementById('importFileInput');
+            const fileNameDiv = document.getElementById('selectedFileName');
+            const messageDiv = document.getElementById('importModalMessage');
+            const startBtn = document.getElementById('startImportBtn');
+            
+            if (fileInput) fileInput.value = '';
+            if (fileNameDiv) {
+                fileNameDiv.style.display = 'none';
+                fileNameDiv.textContent = '';
+                fileNameDiv.style.color = '#b0b0b0'; // 恢复默认颜色
+            }
+            if (startBtn) {
+                startBtn.disabled = true;
+                startBtn.style.opacity = '1';
+            }
+            if (messageDiv) {
+                messageDiv.style.display = 'none';
+                messageDiv.textContent = '';
+                messageDiv.className = '';
+            }
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            const fileNameDiv = document.getElementById('selectedFileName');
+            const messageDiv = document.getElementById('importModalMessage');
+            const startBtn = document.getElementById('startImportBtn');
+
+            // 清除之前的状态
+            messageDiv.style.display = 'none';
+            messageDiv.textContent = '';
+            messageDiv.className = '';
+
+            if (!file) {
+                selectedImportFile = null;
+                fileNameDiv.style.display = 'none';
+                fileNameDiv.textContent = '';
+                startBtn.disabled = true;
+                return;
+            }
+
+            // 验证文件类型
+            const fileName = file.name.toLowerCase();
+            const validExtensions = ['.json', '.csv', '.xlsx', '.xls'];
+            const fileExt = fileName.substring(fileName.lastIndexOf('.'));
+            
+            if (!validExtensions.includes(fileExt)) {
+                messageDiv.className = 'error-message';
+                messageDiv.textContent = '❌ 不支持的文件格式，仅支持 JSON、CSV、Excel 格式';
+                messageDiv.style.display = 'block';
+                event.target.value = '';
+                selectedImportFile = null;
+                fileNameDiv.style.display = 'none';
+                fileNameDiv.textContent = '';
+                startBtn.disabled = true;
+                return;
+            }
+
+            // 验证文件大小（50MB）
+            if (file.size > 50 * 1024 * 1024) {
+                messageDiv.className = 'error-message';
+                messageDiv.textContent = '❌ 文件大小不能超过 50MB';
+                messageDiv.style.display = 'block';
+                event.target.value = '';
+                selectedImportFile = null;
+                fileNameDiv.style.display = 'none';
+                fileNameDiv.textContent = '';
+                startBtn.disabled = true;
+                return;
+            }
+
+            // 文件验证通过 - 更新所有状态
+            selectedImportFile = file;
+            const fileSizeKB = file.size < 1024 ? file.size : (file.size / 1024).toFixed(2);
+            const fileSizeText = file.size < 1024 ? `${file.size} B` : `${fileSizeKB} KB`;
+            fileNameDiv.textContent = `已选择: ${file.name} (${fileSizeText})`;
+            fileNameDiv.style.display = 'block';
+            fileNameDiv.style.color = '#4caf50'; // 绿色表示成功
+            messageDiv.style.display = 'none';
+            startBtn.disabled = false;
+            
+            // 确保按钮可见且可用
+            startBtn.style.opacity = '1';
+            startBtn.style.cursor = 'pointer';
+        }
+
+        async function startImportFromModal() {
+            if (!selectedImportFile) {
+                const messageDiv = document.getElementById('importModalMessage');
+                messageDiv.className = 'error-message';
+                messageDiv.textContent = '❌ 请先选择文件';
+                messageDiv.style.display = 'block';
+                return;
+            }
+
+            // 验证文件对象完整性
+            if (!selectedImportFile.name || !selectedImportFile.size) {
+                const messageDiv = document.getElementById('importModalMessage');
+                messageDiv.className = 'error-message';
+                messageDiv.textContent = '❌ 文件信息不完整，请重新选择文件';
+                messageDiv.style.display = 'block';
+                return;
+            }
+
+            // 先保存文件引用，避免在关闭模态框时被清空
+            const fileToImport = selectedImportFile;
+
+            // 关闭导入模态框（这会清空selectedImportFile）
+            closeImportModal();
+
+            // 开始导入（使用保存的文件引用）
+            try {
+                await startImport(fileToImport);
+            } catch (error) {
+                showMessage(`❌ ${error.message}`, 'error');
+            }
+        }
+
+        async function startImport(file) {
+            try {
+                // 验证文件对象
+                if (!file) {
+                    throw new Error('文件对象无效，请重新选择文件');
+                }
+
+                if (!file.name) {
+                    throw new Error('文件名无效');
+                }
+
+                const formData = new FormData();
+                formData.append('file', file);
+
+                console.log('开始上传文件:', file.name, file.size, file.type || 'unknown');
+
+                const response = await fetch('/api/import', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                console.log('响应状态:', response.status, response.statusText);
+
+                if (!response.ok) {
+                    let errorMessage = '导入失败';
+                    try {
+                        const error = await response.json();
+                        errorMessage = error.error || error.details || errorMessage;
+                        console.error('服务器错误:', error);
+                    } catch (parseError) {
+                        const text = await response.text();
+                        console.error('响应文本:', text);
+                        errorMessage = `服务器错误 (${response.status}): ${text || response.statusText}`;
+                    }
+                    throw new Error(errorMessage);
+                }
+
+                const result = await response.json();
+                
+                console.log('服务器响应:', result);
+                
+                // 所有导入都使用异步方式，在弹窗中显示进度
+                if (result.taskId) {
+                    // 异步导入（数据量大于10条或小于等于10条都使用异步）
+                    currentImportTaskId = result.taskId;
+                    
+                    // 显示进度模态框
+                    openImportProgressModal();
+                    
+                    // 开始轮询任务状态
+                    startPollingImportProgress();
+                } else {
+                    // 如果服务器没有返回taskId，在弹窗中显示错误
+                    console.error('服务器响应中没有taskId:', result);
+                    openImportProgressModal();
+                    const progressInfo = document.getElementById('importProgressInfo');
+                    const resultInfo = document.getElementById('importResultInfo');
+                    const failedInfo = document.getElementById('importFailedInfo');
+                    
+                    progressInfo.textContent = '导入失败';
+                    resultInfo.style.display = 'block';
+                    const errorMsg = result.error || result.message || '服务器未返回任务ID，导入失败';
+                    failedInfo.textContent = `❌ ${errorMsg}`;
+                    failedInfo.style.display = 'block';
+                    document.getElementById('importProgressActions').style.display = 'flex';
+                }
+            } catch (error) {
+                // 错误时也要在弹窗中显示，而不是只显示消息
+                openImportProgressModal();
+                const progressInfo = document.getElementById('importProgressInfo');
+                const resultInfo = document.getElementById('importResultInfo');
+                const failedInfo = document.getElementById('importFailedInfo');
+                
+                progressInfo.textContent = '导入失败';
+                resultInfo.style.display = 'block';
+                failedInfo.textContent = `❌ ${error.message}`;
+                failedInfo.style.display = 'block';
+                document.getElementById('importProgressActions').style.display = 'flex';
+                
+                console.error('导入失败:', error);
+            }
+        }
+
+        function openImportProgressModal() {
+            document.getElementById('importProgressModal').style.display = 'block';
+            document.getElementById('importProgressInfo').textContent = '正在准备导入...';
+            document.getElementById('importProgressBar').style.width = '0%';
+            document.getElementById('importProgressBar').textContent = '0%';
+            document.getElementById('importProgressText').textContent = '0 / 0 条记录';
+            document.getElementById('importProgressActions').style.display = 'none';
+            document.getElementById('importResultInfo').style.display = 'none';
+            document.getElementById('importErrors').style.display = 'none';
+        }
+
+        function closeImportProgressModal() {
+            document.getElementById('importProgressModal').style.display = 'none';
+            if (importProgressInterval) {
+                clearInterval(importProgressInterval);
+                importProgressInterval = null;
+            }
+            currentImportTaskId = null;
+        }
+
+        function startPollingImportProgress() {
+            if (importProgressInterval) {
+                clearInterval(importProgressInterval);
+            }
+
+            importProgressInterval = setInterval(async () => {
+                if (!currentImportTaskId) {
+                    clearInterval(importProgressInterval);
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/api/import/${currentImportTaskId}/status`);
+                    if (!response.ok) {
+                        throw new Error('查询任务状态失败');
+                    }
+
+                    const task = await response.json();
+                    
+                    // 更新进度条
+                    const progressBar = document.getElementById('importProgressBar');
+                    const progressText = document.getElementById('importProgressText');
+                    const progressInfo = document.getElementById('importProgressInfo');
+                    
+                    progressBar.style.width = `${task.progress}%`;
+                    progressBar.textContent = `${task.progress}%`;
+                    
+                    if (task.totalRecords > 0) {
+                        progressText.textContent = `${task.processedRecords} / ${task.totalRecords} 条记录`;
+                    }
+
+                    // 根据任务状态更新UI
+                    if (task.status === 'completed') {
+                        clearInterval(importProgressInterval);
+                        progressInfo.textContent = '导入完成！';
+                        
+                        // 显示导入结果
+                        const resultInfo = document.getElementById('importResultInfo');
+                        const successInfo = document.getElementById('importSuccessInfo');
+                        const failedInfo = document.getElementById('importFailedInfo');
+                        const errorsDiv = document.getElementById('importErrors');
+                        const errorsList = document.getElementById('importErrorsList');
+                        
+                        resultInfo.style.display = 'block';
+                        successInfo.textContent = `✅ 成功导入: ${task.successRecords} 条`;
+                        successInfo.style.display = 'block';
+                        
+                        if (task.failedRecords > 0) {
+                            failedInfo.textContent = `❌ 失败: ${task.failedRecords} 条`;
+                            failedInfo.style.display = 'block';
+                            
+                            if (task.errors && task.errors.length > 0) {
+                                errorsDiv.style.display = 'block';
+                                errorsList.innerHTML = task.errors.slice(0, 10).map(err => 
+                                    `<div style="margin-bottom: 5px;">${escapeHtml(err)}</div>`
+                                ).join('');
+                                if (task.errors.length > 10) {
+                                    errorsList.innerHTML += `<div style="color: #b0b0b0; font-style: italic;">... 还有 ${task.errors.length - 10} 条错误信息</div>`;
+                                }
+                            }
+                        } else {
+                            failedInfo.style.display = 'none';
+                        }
+                        
+                        document.getElementById('importProgressActions').style.display = 'flex';
+                        
+                        // 刷新用户列表（不关闭弹窗）
+                        loadUsers();
+                    } else if (task.status === 'failed') {
+                        clearInterval(importProgressInterval);
+                        progressInfo.textContent = `导入失败: ${task.error || '未知错误'}`;
+                        
+                        // 显示失败信息
+                        const resultInfo = document.getElementById('importResultInfo');
+                        const failedInfo = document.getElementById('importFailedInfo');
+                        const errorsDiv = document.getElementById('importErrors');
+                        const errorsList = document.getElementById('importErrorsList');
+                        
+                        resultInfo.style.display = 'block';
+                        failedInfo.textContent = `❌ 导入失败: ${task.error || '未知错误'}`;
+                        failedInfo.style.display = 'block';
+                        
+                        if (task.errors && task.errors.length > 0) {
+                            errorsDiv.style.display = 'block';
+                            errorsList.innerHTML = task.errors.slice(0, 10).map(err => 
+                                `<div style="margin-bottom: 5px;">${escapeHtml(err)}</div>`
+                            ).join('');
+                            if (task.errors.length > 10) {
+                                errorsList.innerHTML += `<div style="color: #b0b0b0; font-style: italic;">... 还有 ${task.errors.length - 10} 条错误信息</div>`;
+                            }
+                        }
+                        
+                        document.getElementById('importProgressActions').style.display = 'flex';
+                    } else if (task.status === 'processing') {
+                        progressInfo.textContent = '正在导入数据...';
+                    } else {
+                        progressInfo.textContent = '准备中...';
+                    }
+                } catch (error) {
+                    console.error('查询导入进度失败:', error);
+                    clearInterval(importProgressInterval);
+                    importProgressInterval = null;
+                    
+                    // 在弹窗中显示错误，但不关闭弹窗
+                    const progressInfo = document.getElementById('importProgressInfo');
+                    const resultInfo = document.getElementById('importResultInfo');
+                    const failedInfo = document.getElementById('importFailedInfo');
+                    
+                    progressInfo.textContent = '查询进度失败';
+                    if (resultInfo) {
+                        resultInfo.style.display = 'block';
+                    }
+                    if (failedInfo) {
+                        failedInfo.textContent = `❌ 查询进度失败: ${error.message}`;
+                        failedInfo.style.display = 'block';
+                    }
+                    document.getElementById('importProgressActions').style.display = 'flex';
+                    
+                    // 不清除taskId，保持弹窗打开，让用户手动关闭
+                }
+            }, 3000); // 每3秒轮询一次
+        }
+
+        async function downloadImportTemplate() {
+            const format = document.getElementById('importFormat').value;
+            
+            try {
+                const response = await fetch(`/api/import/template/${format}`);
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || '下载模板失败');
+                }
+
+                // 获取文件名
+                const contentDisposition = response.headers.get('Content-Disposition');
+                let fileName = 'import_template';
+                if (contentDisposition) {
+                    const matches = contentDisposition.match(/filename="(.+)"/);
+                    if (matches) {
+                        fileName = decodeURIComponent(matches[1]);
+                    }
+                } else {
+                    // 根据格式添加扩展名
+                    const extMap = {
+                        'json': '.json',
+                        'excel': '.xlsx',
+                        'xlsx': '.xlsx',
+                        'csv': '.csv'
+                    };
+                    fileName += extMap[format] || '.json';
+                }
+
+                // 创建下载链接
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+
+                // 在导入模态框中显示成功消息
+                const messageDiv = document.getElementById('importModalMessage');
+                messageDiv.className = 'success-message';
+                messageDiv.textContent = '✅ 模板下载成功！';
+                messageDiv.style.display = 'block';
+                
+                setTimeout(() => {
+                    messageDiv.style.display = 'none';
+                }, 3000);
+            } catch (error) {
+                const messageDiv = document.getElementById('importModalMessage');
+                messageDiv.className = 'error-message';
+                messageDiv.textContent = `❌ ${error.message}`;
+                messageDiv.style.display = 'block';
+            }
+        }
+
         // 点击模态框外部关闭
         window.onclick = function(event) {
             const addModal = document.getElementById('addModal');
             const detailModal = document.getElementById('detailModal');
             const deleteModal = document.getElementById('deleteModal');
+            const importModal = document.getElementById('importModal');
+            const exportProgressModal = document.getElementById('exportProgressModal');
+            const importProgressModal = document.getElementById('importProgressModal');
             
             if (event.target === addModal) {
                 closeAddModal();
@@ -990,6 +1951,16 @@
             }
             if (event.target === deleteModal) {
                 closeDeleteModal();
+            }
+            if (event.target === importModal) {
+                closeImportModal();
+            }
+            if (event.target === exportProgressModal) {
+                // 导出进度模态框不允许点击外部关闭，必须等待完成或手动关闭
+            }
+            if (event.target === importProgressModal) {
+                // 导入进度模态框不允许点击外部关闭，必须手动点击关闭按钮
+                // 不执行任何操作，保持弹窗打开
             }
         }
     </script>
