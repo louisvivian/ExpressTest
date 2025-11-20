@@ -61,7 +61,11 @@ async function exportUsers(prisma, format, searchName = null, taskId = null) {
         }
 
         // 准备导出目录
-        const exportDir = path.join(__dirname, '../exports');
+        // Vercel 环境使用 /tmp 目录，本地开发使用项目目录
+        const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
+        const exportDir = isVercel 
+            ? '/tmp/exports' 
+            : path.join(__dirname, '../exports');
         if (!fs.existsSync(exportDir)) {
             fs.mkdirSync(exportDir, { recursive: true });
         }

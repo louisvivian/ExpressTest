@@ -155,7 +155,11 @@ router.get('/export/:taskId/download', async (req, res) => {
 
 // 导入相关路由
 // 配置multer用于文件上传
-const uploadsDir = path.join(__dirname, '../uploads');
+// Vercel 环境使用 /tmp 目录，本地开发使用项目目录
+const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
+const uploadsDir = isVercel 
+    ? '/tmp/uploads' 
+    : path.join(__dirname, '../uploads');
 if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
 }
