@@ -99,8 +99,11 @@ module.exports = async (req, res) => {
             return res.status(404).json({ error: '任务不存在' });
         }
 
-        // 设置响应头
+        // 设置响应头，禁用缓存（任务状态是实时变化的）
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
         
         // 返回任务状态
         res.json({
