@@ -1,0 +1,13 @@
+{
+  "taskId": "import_1763711729002_zlcsqmjrt",
+  "status": "completed",
+  "progress": 100,
+  "format": "xlsx",
+  "fileName": "import_template - å¯æ¬.xlsx",
+  "totalRecords": 6,
+  "processedRecords": 6,
+  "successRecords": 6,
+  "failedRecords": 0,
+  "errors": [],
+  "createdAt": "2025-11-21T07:55:29.002Z"
+}
