@@ -86,6 +86,10 @@ function getPrismaClient() {
 // 创建并导出 Prisma Client 实例
 const prisma = getPrismaClient();
 
+// 将 executeWithRetry 附加到 prisma 实例上，方便直接调用
+// 注意：这需要在 executeWithRetry 函数定义之后执行
+// 所以我们在文件末尾再次附加
+
 // 创建一个新的 Prisma Client 实例（保留此函数以保持向后兼容，但不推荐使用）
 function createNewPrismaClient() {
   // 直接返回单例实例，避免创建多个实例导致 prepared statement 冲突
@@ -192,6 +196,9 @@ const disconnectPrisma = async () => {
     console.error('关闭数据库连接时出错:', error);
   }
 };
+
+// 将 executeWithRetry 附加到 prisma 实例上，方便直接调用
+prisma.executeWithRetry = executeWithRetry;
 
 // 导出 Prisma 实例、连接函数、关闭函数和错误处理函数
 module.exports = prisma;

@@ -21,11 +21,24 @@ server.post('/', async (req, res) => {
 
         // 创建任务
         const taskId = await taskManager.createTask(format.toLowerCase(), searchName);
+        console.log(`导出任务已创建: ${taskId}, 格式: ${format}, 搜索名称: ${searchName || '无'}`);
         
         // 异步执行导出任务
+        // 注意：在 Vercel 无服务器环境中，即使响应已返回，异步任务仍会继续执行
         exportUsers(prisma, format.toLowerCase(), searchName, taskId)
+            .then(result => {
+                console.log(`导出任务完成: ${taskId}, 文件: ${result.fileName}, 记录数: ${result.totalRecords}`);
+            })
             .catch(error => {
-                console.error('导出任务失败:', error);
+                console.error(`导出任务失败: ${taskId}`, error);
+                console.error('错误堆栈:', error.stack);
+                // 确保任务状态被更新为失败
+                taskManager.updateTask(taskId, {
+                    status: 'failed',
+                    error: error.message || String(error)
+                }).catch(updateError => {
+                    console.error(`更新任务状态失败: ${taskId}`, updateError);
+                });
             });
 
         res.json({

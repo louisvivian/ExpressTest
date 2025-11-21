@@ -8,6 +8,18 @@ const taskManager = require('./exportTaskManager');
  */
 async function exportUsers(prisma, format, searchName = null, taskId = null) {
     try {
+        console.log(`开始导出任务: ${taskId}, 格式: ${format}, 搜索名称: ${searchName || '无'}`);
+        
+        // 检查 prisma 对象
+        if (!prisma) {
+            throw new Error('Prisma Client 未初始化');
+        }
+        
+        // 检查 executeWithRetry 方法
+        if (typeof prisma.executeWithRetry !== 'function') {
+            throw new Error('prisma.executeWithRetry 方法不可用。请检查 prisma/client.js 是否正确导出');
+        }
+        
         // 构建查询条件
         const where = {};
         if (searchName) {
@@ -17,10 +29,14 @@ async function exportUsers(prisma, format, searchName = null, taskId = null) {
             };
         }
 
+        console.log(`查询条件:`, JSON.stringify(where));
+        
         // 先获取总数
         const total = await prisma.executeWithRetry((p) => 
             p.user.count({ where })
         );
+        
+        console.log(`找到 ${total} 条记录`);
 
         if (taskId) {
             await taskManager.updateTask(taskId, {
