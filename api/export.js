@@ -23,23 +23,33 @@ server.post('/', async (req, res) => {
         const taskId = await taskManager.createTask(format.toLowerCase(), searchName);
         console.log(`导出任务已创建: ${taskId}, 格式: ${format}, 搜索名称: ${searchName || '无'}`);
         
-        // 异步执行导出任务
-        // 注意：在 Vercel 无服务器环境中，即使响应已返回，异步任务仍会继续执行
-        exportUsers(prisma, format.toLowerCase(), searchName, taskId)
-            .then(result => {
+        // 在响应返回前，先启动导出任务
+        // 使用 Promise 确保任务至少开始执行，但不等待完成
+        const exportPromise = (async () => {
+            try {
+                console.log(`开始执行导出任务: ${taskId}`);
+                const result = await exportUsers(prisma, format.toLowerCase(), searchName, taskId);
                 console.log(`导出任务完成: ${taskId}, 文件: ${result.fileName}, 记录数: ${result.totalRecords}`);
-            })
-            .catch(error => {
+            } catch (error) {
                 console.error(`导出任务失败: ${taskId}`, error);
                 console.error('错误堆栈:', error.stack);
                 // 确保任务状态被更新为失败
-                taskManager.updateTask(taskId, {
-                    status: 'failed',
-                    error: error.message || String(error)
-                }).catch(updateError => {
+                try {
+                    await taskManager.updateTask(taskId, {
+                        status: 'failed',
+                        error: error.message || String(error)
+                    });
+                } catch (updateError) {
                     console.error(`更新任务状态失败: ${taskId}`, updateError);
-                });
-            });
+                }
+            }
+        })();
+        
+        // 不等待 Promise 完成，立即返回响应
+        // 在 Vercel 中，函数会继续执行直到完成或超时
+        exportPromise.catch(err => {
+            console.error(`导出任务 Promise 错误: ${taskId}`, err);
+        });
 
         res.json({
             taskId,

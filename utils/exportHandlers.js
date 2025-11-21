@@ -8,17 +8,42 @@ const taskManager = require('./exportTaskManager');
  */
 async function exportUsers(prisma, format, searchName = null, taskId = null) {
     try {
-        console.log(`开始导出任务: ${taskId}, 格式: ${format}, 搜索名称: ${searchName || '无'}`);
+        console.log(`[导出任务 ${taskId}] 函数开始执行`);
+        
+        // 立即更新任务状态为 processing，确认函数已被调用
+        if (taskId) {
+            try {
+                await taskManager.updateTask(taskId, {
+                    status: 'processing',
+                    progress: 1
+                });
+                console.log(`[导出任务 ${taskId}] 任务状态已更新为 processing`);
+            } catch (updateError) {
+                console.error(`[导出任务 ${taskId}] 更新任务状态失败:`, updateError);
+                // 继续执行，不因为状态更新失败而中断
+            }
+        }
+        
+        console.log(`[导出任务 ${taskId}] 格式: ${format}, 搜索名称: ${searchName || '无'}`);
         
         // 检查 prisma 对象
         if (!prisma) {
+            console.error(`[导出任务 ${taskId}] Prisma Client 未初始化`);
             throw new Error('Prisma Client 未初始化');
         }
         
+        console.log(`[导出任务 ${taskId}] Prisma Client 已初始化`);
+        console.log(`[导出任务 ${taskId}] Prisma Client 类型:`, typeof prisma);
+        console.log(`[导出任务 ${taskId}] Prisma Client 可用方法:`, Object.keys(prisma).filter(k => !k.startsWith('$')).slice(0, 10));
+        
         // 检查 executeWithRetry 方法
         if (typeof prisma.executeWithRetry !== 'function') {
+            console.error(`[导出任务 ${taskId}] prisma.executeWithRetry 不存在`);
+            console.error(`[导出任务 ${taskId}] prisma 对象键:`, Object.keys(prisma));
             throw new Error('prisma.executeWithRetry 方法不可用。请检查 prisma/client.js 是否正确导出');
         }
+        
+        console.log(`[导出任务 ${taskId}] prisma.executeWithRetry 方法可用`);
         
         // 构建查询条件
         const where = {};
@@ -29,21 +54,22 @@ async function exportUsers(prisma, format, searchName = null, taskId = null) {
             };
         }
 
-        console.log(`查询条件:`, JSON.stringify(where));
+        console.log(`[导出任务 ${taskId}] 查询条件:`, JSON.stringify(where));
         
         // 先获取总数
+        console.log(`[导出任务 ${taskId}] 开始查询总数...`);
         const total = await prisma.executeWithRetry((p) => 
             p.user.count({ where })
         );
         
-        console.log(`找到 ${total} 条记录`);
+        console.log(`[导出任务 ${taskId}] 找到 ${total} 条记录`);
 
         if (taskId) {
             await taskManager.updateTask(taskId, {
                 status: 'processing',
                 totalRecords: total,
                 processedRecords: 0,
-                progress: 0
+                progress: 2
             });
         }
 
@@ -139,13 +165,22 @@ async function exportUsers(prisma, format, searchName = null, taskId = null) {
             });
         }
 
+        console.log(`[导出任务 ${taskId}] 导出完成，文件: ${fileName}, 记录数: ${allUsers.length}`);
         return { fileName, filePath, totalRecords: allUsers.length };
     } catch (error) {
+        console.error(`[导出任务 ${taskId}] 导出过程中发生错误:`, error);
+        console.error(`[导出任务 ${taskId}] 错误堆栈:`, error.stack);
+        
         if (taskId) {
-            await taskManager.updateTask(taskId, {
-                status: 'failed',
-                error: error.message
-            });
+            try {
+                await taskManager.updateTask(taskId, {
+                    status: 'failed',
+                    error: error.message || String(error)
+                });
+                console.log(`[导出任务 ${taskId}] 任务状态已更新为 failed`);
+            } catch (updateError) {
+                console.error(`[导出任务 ${taskId}] 更新任务状态为失败时出错:`, updateError);
+            }
         }
         throw error;
     }
