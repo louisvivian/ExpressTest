@@ -24,33 +24,34 @@ server.post('/', async (req, res) => {
         console.log(`导出任务已创建: ${taskId}, 格式: ${format}, 搜索名称: ${searchName || '无'}`);
         
         // 在响应返回前，先启动导出任务
-        // 使用 Promise 确保任务至少开始执行，但不等待完成
-        const exportPromise = (async () => {
+        // 在 Vercel 中，我们需要确保任务至少开始执行
+        // 使用立即执行的 async IIFE 并添加错误处理
+        (async () => {
             try {
-                console.log(`开始执行导出任务: ${taskId}`);
+                console.log(`[${taskId}] 开始执行导出任务...`);
                 const result = await exportUsers(prisma, format.toLowerCase(), searchName, taskId);
-                console.log(`导出任务完成: ${taskId}, 文件: ${result.fileName}, 记录数: ${result.totalRecords}`);
+                console.log(`[${taskId}] 导出任务完成: 文件=${result.fileName}, 记录数=${result.totalRecords}`);
             } catch (error) {
-                console.error(`导出任务失败: ${taskId}`, error);
-                console.error('错误堆栈:', error.stack);
+                console.error(`[${taskId}] 导出任务失败:`, error);
+                console.error(`[${taskId}] 错误堆栈:`, error.stack);
                 // 确保任务状态被更新为失败
                 try {
                     await taskManager.updateTask(taskId, {
                         status: 'failed',
                         error: error.message || String(error)
                     });
+                    console.log(`[${taskId}] 任务状态已更新为 failed`);
                 } catch (updateError) {
-                    console.error(`更新任务状态失败: ${taskId}`, updateError);
+                    console.error(`[${taskId}] 更新任务状态失败:`, updateError);
                 }
             }
-        })();
-        
-        // 不等待 Promise 完成，立即返回响应
-        // 在 Vercel 中，函数会继续执行直到完成或超时
-        exportPromise.catch(err => {
-            console.error(`导出任务 Promise 错误: ${taskId}`, err);
+        })().catch(err => {
+            // 捕获未处理的 Promise 拒绝
+            console.error(`[${taskId}] 导出任务 Promise 未捕获的错误:`, err);
         });
 
+        // 立即返回响应，不等待任务完成
+        // 在 Vercel 中，函数会继续执行直到完成或超时（最多 60 秒）
         res.json({
             taskId,
             message: '导出任务已创建',

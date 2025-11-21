@@ -98,53 +98,71 @@ class ExportTaskManager {
      * 更新任务状态
      */
     async updateTask(taskId, updates) {
+        console.log(`[任务管理器] updateTask 开始: taskId=${taskId}, updates=`, JSON.stringify(updates));
+        
         try {
             this._ensurePrismaReady();
+            console.log(`[任务管理器] updateTask: Prisma 检查通过`);
         } catch (error) {
             console.error(`[任务管理器] updateTask 检查失败 (taskId: ${taskId}):`, error);
             throw error;
         }
         
-        // 如果明确指定了 progress，优先使用指定的值
-        // 否则，如果更新了 processedRecords 或 totalRecords，自动计算进度百分比
-        if (updates.progress === undefined && 
-            (updates.processedRecords !== undefined || updates.totalRecords !== undefined)) {
-            const currentTask = await prisma.exportTask.findUnique({
-                where: { taskId },
-                select: { totalRecords: true, processedRecords: true }
-            });
-            
-            const totalRecords = updates.totalRecords !== undefined 
-                ? updates.totalRecords 
-                : (currentTask?.totalRecords || 0);
-            const processedRecords = updates.processedRecords !== undefined 
-                ? updates.processedRecords 
-                : (currentTask?.processedRecords || 0);
-            
-            if (totalRecords > 0) {
-                updates.progress = Math.min(100, Math.round((processedRecords / totalRecords) * 100));
+        try {
+            // 如果明确指定了 progress，优先使用指定的值
+            // 否则，如果更新了 processedRecords 或 totalRecords，自动计算进度百分比
+            if (updates.progress === undefined && 
+                (updates.processedRecords !== undefined || updates.totalRecords !== undefined)) {
+                console.log(`[任务管理器] updateTask: 需要查询当前任务以计算进度`);
+                const currentTask = await prisma.exportTask.findUnique({
+                    where: { taskId },
+                    select: { totalRecords: true, processedRecords: true }
+                });
+                console.log(`[任务管理器] updateTask: 当前任务查询完成`, currentTask);
+                
+                const totalRecords = updates.totalRecords !== undefined 
+                    ? updates.totalRecords 
+                    : (currentTask?.totalRecords || 0);
+                const processedRecords = updates.processedRecords !== undefined 
+                    ? updates.processedRecords 
+                    : (currentTask?.processedRecords || 0);
+                
+                if (totalRecords > 0) {
+                    updates.progress = Math.min(100, Math.round((processedRecords / totalRecords) * 100));
+                    console.log(`[任务管理器] updateTask: 计算进度=${updates.progress}%`);
+                }
             }
+            
+            console.log(`[任务管理器] updateTask: 准备更新数据库，taskId=${taskId}`);
+            const task = await prisma.exportTask.update({
+                where: { taskId },
+                data: updates
+            });
+            console.log(`[任务管理器] updateTask: 数据库更新成功`);
+            
+            // 转换为普通对象，保持向后兼容
+            const result = {
+                taskId: task.taskId,
+                status: task.status,
+                progress: task.progress,
+                format: task.format,
+                searchName: task.searchName,
+                fileName: task.fileName,
+                filePath: task.filePath,
+                error: task.error,
+                createdAt: task.createdAt,
+                totalRecords: task.totalRecords,
+                processedRecords: task.processedRecords
+            };
+            console.log(`[任务管理器] updateTask: 完成，返回结果`);
+            return result;
+        } catch (error) {
+            console.error(`[任务管理器] updateTask: 数据库操作失败 (taskId: ${taskId}):`, error);
+            console.error(`[任务管理器] updateTask: 错误类型:`, error.constructor.name);
+            console.error(`[任务管理器] updateTask: 错误消息:`, error.message);
+            console.error(`[任务管理器] updateTask: 错误堆栈:`, error.stack);
+            throw error;
         }
-        
-        const task = await prisma.exportTask.update({
-            where: { taskId },
-            data: updates
-        });
-        
-        // 转换为普通对象，保持向后兼容
-        return {
-            taskId: task.taskId,
-            status: task.status,
-            progress: task.progress,
-            format: task.format,
-            searchName: task.searchName,
-            fileName: task.fileName,
-            filePath: task.filePath,
-            error: task.error,
-            createdAt: task.createdAt,
-            totalRecords: task.totalRecords,
-            processedRecords: task.processedRecords
-        };
     }
 
     /**
