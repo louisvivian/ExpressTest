@@ -86,6 +86,24 @@ function getPrismaClient() {
 // 创建并导出 Prisma Client 实例
 const prisma = getPrismaClient();
 
+// 验证 Prisma Client 是否正确生成
+if (prisma) {
+  console.log('[Prisma Client] 实例已创建');
+  const modelKeys = Object.keys(prisma).filter(key => 
+    !key.startsWith('$') && typeof prisma[key] === 'object' && prisma[key] !== null
+  );
+  console.log('[Prisma Client] 可用模型:', modelKeys);
+  
+  if (!prisma.exportTask) {
+    console.warn('[Prisma Client] ⚠️  exportTask 模型不存在！');
+    console.warn('[Prisma Client] 请确保已运行 "prisma generate"');
+  } else {
+    console.log('[Prisma Client] ✅ exportTask 模型可用');
+  }
+} else {
+  console.error('[Prisma Client] ❌ 实例创建失败');
+}
+
 // 将 executeWithRetry 附加到 prisma 实例上，方便直接调用
 // 注意：这需要在 executeWithRetry 函数定义之后执行
 // 所以我们在文件末尾再次附加

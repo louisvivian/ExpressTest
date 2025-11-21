@@ -7,21 +7,35 @@ const taskManager = require('./exportTaskManager');
  * 导出用户数据
  */
 async function exportUsers(prisma, format, searchName = null, taskId = null) {
+    console.log(`[导出任务 ${taskId}] ========== 函数开始执行 ==========`);
+    console.log(`[导出任务 ${taskId}] 参数: format=${format}, searchName=${searchName}, taskId=${taskId}`);
+    
     try {
-        console.log(`[导出任务 ${taskId}] 函数开始执行`);
-        
         // 立即更新任务状态为 processing，确认函数已被调用
         if (taskId) {
             try {
-                await taskManager.updateTask(taskId, {
+                console.log(`[导出任务 ${taskId}] 步骤1: 准备更新任务状态为 processing...`);
+                console.log(`[导出任务 ${taskId}] taskManager 类型:`, typeof taskManager);
+                console.log(`[导出任务 ${taskId}] taskManager.updateTask 类型:`, typeof taskManager.updateTask);
+                
+                const updatePromise = taskManager.updateTask(taskId, {
                     status: 'processing',
                     progress: 1
                 });
-                console.log(`[导出任务 ${taskId}] 任务状态已更新为 processing`);
+                console.log(`[导出任务 ${taskId}] 步骤2: updateTask Promise 已创建，等待结果...`);
+                
+                await updatePromise;
+                console.log(`[导出任务 ${taskId}] 步骤3: 任务状态已更新为 processing`);
             } catch (updateError) {
-                console.error(`[导出任务 ${taskId}] 更新任务状态失败:`, updateError);
+                console.error(`[导出任务 ${taskId}] ========== 更新任务状态失败 ==========`);
+                console.error(`[导出任务 ${taskId}] 错误类型:`, updateError.constructor.name);
+                console.error(`[导出任务 ${taskId}] 错误消息:`, updateError.message);
+                console.error(`[导出任务 ${taskId}] 错误堆栈:`, updateError.stack);
                 // 继续执行，不因为状态更新失败而中断
+                // 但如果 Prisma 有问题，后续操作也会失败，所以这里记录详细错误
             }
+        } else {
+            console.log(`[导出任务 ${taskId}] 警告: taskId 为空，跳过状态更新`);
         }
         
         console.log(`[导出任务 ${taskId}] 格式: ${format}, 搜索名称: ${searchName || '无'}`);

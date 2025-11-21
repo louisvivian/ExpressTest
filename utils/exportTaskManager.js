@@ -12,18 +12,29 @@ class ExportTaskManager {
      */
     _ensurePrismaReady() {
         if (!prisma) {
+            console.error('[任务管理器] Prisma Client 未初始化');
             throw new Error('Prisma Client 未初始化。请检查 prisma/client.js 是否正确导出');
         }
+        
+        console.log('[任务管理器] Prisma Client 已初始化');
+        console.log('[任务管理器] Prisma Client 类型:', typeof prisma);
+        console.log('[任务管理器] Prisma Client 键数量:', Object.keys(prisma).length);
+        
+        // 检查 exportTask 模型
         if (!prisma.exportTask) {
             const availableModels = Object.keys(prisma).filter(key => 
                 !key.startsWith('$') && typeof prisma[key] === 'object' && prisma[key] !== null
             );
+            console.error('[任务管理器] exportTask 模型不存在');
+            console.error('[任务管理器] 可用模型:', availableModels);
             throw new Error(
                 `Prisma Client 中未找到 exportTask 模型。` +
                 `可用模型: ${availableModels.length > 0 ? availableModels.join(', ') : '无'}. ` +
                 `请确保已运行 "prisma generate" 并且 schema.prisma 中包含 ExportTask 模型定义。`
             );
         }
+        
+        console.log('[任务管理器] exportTask 模型可用');
     }
 
     /**
@@ -87,7 +98,12 @@ class ExportTaskManager {
      * 更新任务状态
      */
     async updateTask(taskId, updates) {
-        this._ensurePrismaReady();
+        try {
+            this._ensurePrismaReady();
+        } catch (error) {
+            console.error(`[任务管理器] updateTask 检查失败 (taskId: ${taskId}):`, error);
+            throw error;
+        }
         
         // 如果明确指定了 progress，优先使用指定的值
         // 否则，如果更新了 processedRecords 或 totalRecords，自动计算进度百分比
