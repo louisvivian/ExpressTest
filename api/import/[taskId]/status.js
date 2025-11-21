@@ -59,11 +59,43 @@ module.exports = async (req, res) => {
         }
         
         // 查询任务状态
+        console.log(`[状态查询] 查询任务: ${taskId}`);
         const task = importTaskManager.getTask(taskId);
 
         if (!task) {
+            console.error(`[状态查询] 任务不存在: ${taskId}`);
+            
+            // 尝试列出文件系统中的所有任务文件（用于调试）
+            try {
+                const fs = require('fs');
+                const path = require('path');
+                const { isVercel } = require('../../../utils/envConfig');
+                const tasksDir = isVercel() ? '/tmp/import_tasks' : path.join(__dirname, '../../../tmp/import_tasks');
+                
+                console.error(`[状态查询] 任务目录: ${tasksDir}`);
+                console.error(`[状态查询] 是否在 Vercel 环境: ${isVercel()}`);
+                
+                if (fs.existsSync(tasksDir)) {
+                    const files = fs.readdirSync(tasksDir);
+                    console.error(`[状态查询] 文件系统中的任务文件数: ${files.length}`);
+                    console.error(`[状态查询] 任务文件列表:`, files.slice(0, 10)); // 只显示前10个
+                    
+                    // 检查是否有匹配的任务文件
+                    const expectedFileName = `${taskId.replace(/[^a-zA-Z0-9_-]/g, '_')}.json`;
+                    const hasFile = files.includes(expectedFileName);
+                    console.error(`[状态查询] 期望的文件名: ${expectedFileName}`);
+                    console.error(`[状态查询] 文件是否存在: ${hasFile}`);
+                } else {
+                    console.error(`[状态查询] 任务目录不存在: ${tasksDir}`);
+                }
+            } catch (err) {
+                console.error(`[状态查询] 检查文件系统失败:`, err);
+            }
+            
             return res.status(404).json({ error: '任务不存在' });
         }
+        
+        console.log(`[状态查询] 找到任务: ${taskId}, 状态: ${task.status}`);
 
         // 设置响应头，禁用缓存（任务状态是实时变化的）
         res.setHeader('Content-Type', 'application/json; charset=utf-8');

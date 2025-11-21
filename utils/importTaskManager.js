@@ -54,18 +54,24 @@ class ImportTaskManager {
     _readTaskFromFile(taskId) {
         try {
             const filePath = this._getTaskFilePath(taskId);
+            console.log(`[任务管理器] 尝试从文件读取任务: ${taskId}, 路径: ${filePath}`);
+            
             if (!fs.existsSync(filePath)) {
+                console.log(`[任务管理器] 任务文件不存在: ${filePath}`);
                 return null;
             }
+            
             const content = fs.readFileSync(filePath, 'utf8');
             const task = JSON.parse(content);
             // 转换日期字符串回 Date 对象
             if (task.createdAt && typeof task.createdAt === 'string') {
                 task.createdAt = new Date(task.createdAt);
             }
+            console.log(`[任务管理器] 成功从文件读取任务: ${taskId}, 状态: ${task.status}`);
             return task;
         } catch (error) {
-            console.error(`读取任务文件失败 (taskId: ${taskId}):`, error);
+            console.error(`[任务管理器] 读取任务文件失败 (taskId: ${taskId}):`, error);
+            console.error(`[任务管理器] 错误堆栈:`, error.stack);
             return null;
         }
     }
@@ -84,9 +90,17 @@ class ImportTaskManager {
                     : task.createdAt
             };
             fs.writeFileSync(filePath, JSON.stringify(taskToSave, null, 2), 'utf8');
-            return true;
+            // 验证文件是否写入成功
+            if (fs.existsSync(filePath)) {
+                console.log(`[任务管理器] 成功写入任务文件: ${task.taskId}, 路径: ${filePath}`);
+                return true;
+            } else {
+                console.error(`[任务管理器] 文件写入后验证失败: ${filePath}`);
+                return false;
+            }
         } catch (error) {
-            console.error(`写入任务文件失败 (taskId: ${task.taskId}):`, error);
+            console.error(`[任务管理器] 写入任务文件失败 (taskId: ${task.taskId}):`, error);
+            console.error(`[任务管理器] 错误堆栈:`, error.stack);
             return false;
         }
     }
@@ -120,17 +134,24 @@ class ImportTaskManager {
      * 优先从内存读取，如果内存没有，则从文件系统读取
      */
     getTask(taskId) {
+        console.log(`[任务管理器] 获取任务: ${taskId}, 任务目录: ${this.tasksDir}`);
+        
         // 先从内存读取
         let task = this.tasks.get(taskId);
         if (task) {
+            console.log(`[任务管理器] 从内存获取任务: ${taskId}`);
             return task;
         }
         
         // 内存没有，从文件系统读取
+        console.log(`[任务管理器] 内存中没有任务，尝试从文件系统读取: ${taskId}`);
         task = this._readTaskFromFile(taskId);
         if (task) {
             // 加载到内存缓存
             this.tasks.set(taskId, task);
+            console.log(`[任务管理器] 从文件系统加载任务到内存: ${taskId}`);
+        } else {
+            console.error(`[任务管理器] 无法从文件系统读取任务: ${taskId}`);
         }
         return task;
     }
