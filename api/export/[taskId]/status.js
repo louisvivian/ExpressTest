@@ -1,61 +1,6 @@
 require('dotenv').config();
 const taskManager = require('../../../utils/exportTaskManager');
-
-// 提取 taskId 的辅助函数
-function extractTaskId(req) {
-    let taskId = null;
-    
-    // 方法1: 从 req.query.taskId 获取（如果 Vercel 自动解析或我们手动设置）
-    if (req.query && req.query.taskId) {
-        taskId = req.query.taskId;
-    }
-    
-    // 方法2: 从 Express 路由参数获取
-    if (!taskId && req.params && req.params.taskId) {
-        taskId = req.params.taskId;
-    }
-    
-    // 方法3: 从 URL 路径中解析（备用方法）
-    if (!taskId) {
-        // 尝试从多个可能的 URL 来源获取
-        const possibleUrls = [
-            req.url,
-            req.path,
-            req.originalUrl,
-            req.headers && (req.headers['x-vercel-original-url'] || req.headers['x-invoke-path'])
-        ].filter(Boolean);
-        
-        for (const originalUrl of possibleUrls) {
-            if (!originalUrl) continue;
-            
-            // 使用正则表达式匹配完整路径（最可靠的方法）
-            const match = originalUrl.match(/\/api\/export\/([^\/\?]+)\/status/);
-            if (match && match[1]) {
-                taskId = match[1];
-                break;
-            }
-            
-            // 备用方法：从路径中解析
-            const path = originalUrl.split('?')[0];
-            const parts = path.split('/').filter(part => part);
-            
-            // 查找 taskId（路径中 export 和 status 之间的部分）
-            const exportIndex = parts.indexOf('export');
-            const statusIndex = parts.indexOf('status');
-            
-            if (exportIndex !== -1 && statusIndex !== -1 && statusIndex > exportIndex + 1) {
-                taskId = parts[exportIndex + 1];
-                break;
-            } else if (parts.length >= 2 && parts[parts.length - 1] === 'status') {
-                // 如果路径是 /xxx/status，taskId 是倒数第二个部分
-                taskId = parts[parts.length - 2];
-                break;
-            }
-        }
-    }
-    
-    return taskId;
-}
+const { extractTaskId } = require('../../../utils/routeParams');
 
 // ⭐️ 关键：导出一个 handler 函数给 Vercel
 // 在 Vercel 中，请求会被路由到 /api/export/:taskId/status
@@ -68,7 +13,7 @@ module.exports = async (req, res) => {
         }
         
         // 提取 taskId
-        const taskId = extractTaskId(req);
+        const taskId = extractTaskId(req, 'export', 'status');
         
         if (!taskId) {
             // 记录调试信息

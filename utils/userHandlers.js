@@ -160,41 +160,10 @@ async function deleteUser(req, res, prisma, userId) {
     }
 }
 
-/**
- * 从请求中提取用户 ID（用于 Vercel serverless 环境）
- */
-function extractUserId(req) {
-    let id = null;
-    
-    // 方法1: 从 req.query.id 获取（如果 Vercel 自动解析）
-    if (req.query && req.query.id) {
-        id = req.query.id;
-    }
-    
-    // 方法2: 从 URL 路径中解析
-    if (!id && req.url) {
-        // 移除查询字符串
-        const path = req.url.split('?')[0];
-        // 分割路径并获取最后一部分
-        const parts = path.split('/').filter(part => part && part !== 'api' && part !== 'users');
-        if (parts.length > 0) {
-            id = parts[parts.length - 1];
-        }
-    }
-    
-    // 方法3: 从 Express 路由参数获取
-    if (!id && req.params && req.params.id) {
-        id = req.params.id;
-    }
-    
-    return id;
-}
-
 module.exports = {
     getUsersList,
     getUserById,
     createUser,
-    deleteUser,
-    extractUserId
+    deleteUser
 };
 

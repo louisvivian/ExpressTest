@@ -9,9 +9,11 @@ function getPrismaClient() {
   if (!prismaInstance) {
     let databaseUrl = process.env.DATABASE_URL;
     
-    // 检查是否在 Vercel 环境中（serverless 环境）
-    const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
-    const isServerless = isVercel || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NETLIFY;
+    // 检查是否在 serverless 环境中
+    const { isVercel, isServerless, isDevelopment } = require('../utils/envConfig');
+    const isVercelEnv = isVercel();
+    const isServerlessEnv = isServerless();
+    const isDevEnv = isDevelopment();
     
     if (databaseUrl) {
       // 检查 URL 是否已经有查询参数
@@ -32,7 +34,7 @@ function getPrismaClient() {
       }
       
       // 在 serverless 环境中，建议使用较小的连接池
-      if (isServerless) {
+      if (isServerlessEnv) {
         // 添加连接池大小限制（serverless 环境建议使用较小的值）
         if (!databaseUrl.includes('connection_limit')) {
           databaseUrl = `${databaseUrl}${separator}connection_limit=1`;
@@ -63,14 +65,14 @@ function getPrismaClient() {
     }
     
     // 在开发环境中，打印最终的连接 URL（隐藏密码）
-    if (process.env.NODE_ENV === 'development') {
+    if (isDevEnv) {
       const maskedUrl = databaseUrl.replace(/:([^:@]+)@/, ':****@');
       console.log('Prisma Client 连接配置:', maskedUrl);
     }
     
     // 创建 Prisma Client
     prismaInstance = new PrismaClient({
-      log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
+      log: isDevEnv ? ['error', 'warn'] : ['error'],
       errorFormat: 'pretty',
       datasources: {
         db: {

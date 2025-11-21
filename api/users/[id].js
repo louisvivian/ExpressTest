@@ -1,7 +1,8 @@
 require('dotenv').config();
 const prisma = require('../../prisma/client');
 const { createExpressMiddleware } = require('../../utils/middleware');
-const { getUserById, deleteUser, extractUserId } = require('../../utils/userHandlers');
+const { getUserById, deleteUser } = require('../../utils/userHandlers');
+const { extractUserId } = require('../../utils/routeParams');
 
 // 创建 Express 服务器并配置中间件
 const server = createExpressMiddleware();

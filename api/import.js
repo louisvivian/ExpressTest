@@ -1,64 +1,18 @@
 require('dotenv').config();
 const prisma = require('../prisma/client');
 const express = require('express');
-const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { importUsers, countRecords } = require('../utils/importHandlers');
 const importTaskManager = require('../utils/importTaskManager');
+const { createUploadMiddleware } = require('../utils/uploadConfig');
+const { createVercelHandler } = require('../utils/vercelHandler');
 
 // 创建 Express 服务器（不包含 json/urlencoded 中间件，避免与 multer 冲突）
 const server = express();
 
 // 配置multer用于文件上传
-// Vercel 环境使用 /tmp 目录，本地开发使用项目目录
-const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
-const uploadsDir = isVercel 
-    ? '/tmp/uploads' 
-    : path.join(__dirname, '../uploads');
-if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, uploadsDir);
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const ext = path.extname(file.originalname);
-        cb(null, `import_${uniqueSuffix}${ext}`);
-    }
-});
-
-const upload = multer({
-    storage: storage,
-    limits: {
-        fileSize: 50 * 1024 * 1024 // 50MB
-    },
-    fileFilter: (req, file, cb) => {
-        const allowedMimes = [
-            'application/json',
-            'text/csv',
-            'application/vnd.ms-excel',
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'application/octet-stream' // 某些浏览器可能发送这个MIME类型
-        ];
-        const allowedExts = ['.json', '.csv', '.xlsx', '.xls'];
-        const ext = path.extname(file.originalname).toLowerCase();
-        
-        // 优先检查文件扩展名
-        if (allowedExts.includes(ext)) {
-            cb(null, true);
-        } else if (allowedMimes.includes(file.mimetype)) {
-            cb(null, true);
-        } else {
-            const error = new Error('不支持的文件格式，仅支持 JSON、CSV、Excel 格式');
-            req.fileValidationError = error.message;
-            cb(error);
-        }
-    }
-});
+const upload = createUploadMiddleware();
 
 // 上传文件并创建导入任务 - POST /api/import
 server.post('/', upload.single('file'), async (req, res) => {
@@ -151,35 +105,17 @@ server.post('/', upload.single('file'), async (req, res) => {
                 console.error('删除文件失败:', unlinkError);
             }
         }
+        const { isDevelopment } = require('../utils/envConfig');
         const statusCode = error.statusCode || 500;
         res.status(statusCode).json({ 
             error: error.message || '创建导入任务失败', 
             details: error.message,
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+            stack: isDevelopment() ? error.stack : undefined
         });
     }
 });
 
 // ⭐️ 关键：导出一个 handler 函数给 Vercel
 // 在 Vercel 中，请求会被路由到 /api/import，Express 会处理这个请求
-module.exports = async (req, res) => {
-    try {
-        // 在 Vercel 中，req.url 可能是 /api/import 或 /api/import?query=value
-        // 我们需要修改 req.url 为 / 或 /?query=value 以便 Express 路由能正确匹配
-        const originalUrl = req.url || '';
-        const [path, queryString] = originalUrl.split('?');
-        const newPath = path.replace(/^\/api\/import\/?/, '/') || '/';
-        req.url = queryString ? `${newPath}?${queryString}` : newPath;
-        
-        await server(req, res);
-    } catch (error) {
-        console.error('未处理的错误:', error);
-        if (!res.headersSent) {
-            res.status(500).json({ 
-                error: '服务器内部错误', 
-                details: error.message 
-            });
-        }
-    }
-};
+module.exports = createVercelHandler(server, '/api/import');
 

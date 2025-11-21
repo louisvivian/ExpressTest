@@ -323,14 +323,8 @@ function parseCSVLine(line) {
  * 生成导入模板文件
  */
 function generateTemplate(format) {
-    // Vercel 环境使用 /tmp 目录，本地开发使用项目目录
-    const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
-    const templateDir = isVercel 
-        ? '/tmp/templates' 
-        : path.join(__dirname, '../templates');
-    if (!fs.existsSync(templateDir)) {
-        fs.mkdirSync(templateDir, { recursive: true });
-    }
+    const { getTemplatesDir } = require('./envConfig');
+    const templateDir = getTemplatesDir();
 
     const sampleData = [
         { name: '张三' },
