@@ -156,13 +156,39 @@ class ExportTaskManager {
             }
             
             console.log(`[任务管理器] updateTask: 准备更新数据库，taskId=${taskId}`);
-            const task = await prisma.executeWithRetry((p) => 
-                p.exportTask.update({
-                    where: { taskId },
-                    data: updates
-                })
-            );
-            console.log(`[任务管理器] updateTask: 数据库更新成功`);
+            console.log(`[任务管理器] updateTask: executeWithRetry 类型:`, typeof prisma.executeWithRetry);
+            console.log(`[任务管理器] updateTask: prisma.exportTask 类型:`, typeof prisma.exportTask);
+            console.log(`[任务管理器] updateTask: prisma.exportTask.update 类型:`, typeof prisma.exportTask?.update);
+            
+            // 添加超时处理（30秒超时）
+            let updatePromise;
+            try {
+                console.log(`[任务管理器] updateTask: 调用 executeWithRetry...`);
+                updatePromise = prisma.executeWithRetry((p) => {
+                    console.log(`[任务管理器] updateTask: executeWithRetry 回调函数执行，p.exportTask 类型:`, typeof p?.exportTask);
+                    console.log(`[任务管理器] updateTask: 执行 Prisma update 操作...`);
+                    const updateOp = p.exportTask.update({
+                        where: { taskId },
+                        data: updates
+                    });
+                    console.log(`[任务管理器] updateTask: Prisma update Promise 已创建`);
+                    return updateOp;
+                });
+                console.log(`[任务管理器] updateTask: executeWithRetry Promise 已创建`);
+            } catch (syncError) {
+                console.error(`[任务管理器] updateTask: 同步错误（创建 Promise 时）:`, syncError);
+                throw syncError;
+            }
+            
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => {
+                    reject(new Error(`updateTask 操作超时（30秒）: taskId=${taskId}`));
+                }, 30000);
+            });
+            
+            console.log(`[任务管理器] updateTask: 等待数据库操作完成...`);
+            const task = await Promise.race([updatePromise, timeoutPromise]);
+            console.log(`[任务管理器] updateTask: 数据库更新成功，返回数据:`, task ? '有数据' : '无数据');
             
             // 转换为普通对象，保持向后兼容
             const result = {
