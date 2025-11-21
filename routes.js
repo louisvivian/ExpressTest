@@ -56,7 +56,7 @@ router.post('/export', async (req, res) => {
         }
 
         // 创建任务
-        const taskId = taskManager.createTask(format.toLowerCase(), searchName);
+        const taskId = await taskManager.createTask(format.toLowerCase(), searchName);
         
         // 异步执行导出任务
         exportUsers(prisma, format.toLowerCase(), searchName, taskId)
@@ -79,7 +79,7 @@ router.post('/export', async (req, res) => {
 router.get('/export/:taskId/status', async (req, res) => {
     try {
         const { taskId } = req.params;
-        const task = taskManager.getTask(taskId);
+        const task = await taskManager.getTask(taskId);
 
         if (!task) {
             return res.status(404).json({ error: '任务不存在' });
@@ -105,7 +105,7 @@ router.get('/export/:taskId/status', async (req, res) => {
 router.get('/export/:taskId/download', async (req, res) => {
     try {
         const { taskId } = req.params;
-        const task = taskManager.getTask(taskId);
+        const task = await taskManager.getTask(taskId);
 
         if (!task) {
             return res.status(404).json({ error: '任务不存在' });

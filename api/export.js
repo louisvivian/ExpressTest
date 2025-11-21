@@ -20,7 +20,7 @@ server.post('/', async (req, res) => {
         }
 
         // 创建任务
-        const taskId = taskManager.createTask(format.toLowerCase(), searchName);
+        const taskId = await taskManager.createTask(format.toLowerCase(), searchName);
         
         // 异步执行导出任务
         exportUsers(prisma, format.toLowerCase(), searchName, taskId)

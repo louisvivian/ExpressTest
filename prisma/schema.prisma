@@ -25,3 +25,20 @@ model InfoView {
 
   @@map("info_view")
 }
+
+model ExportTask {
+  taskId           String   @id
+  status           String   // pending, processing, completed, failed
+  progress         Int      @default(0)
+  format           String
+  searchName       String?
+  fileName         String?
+  filePath         String?
+  error            String?
+  totalRecords     Int      @default(0)
+  processedRecords Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("export_task")
+}

@@ -1437,14 +1437,16 @@
 
                     const task = await response.json();
                     
-                    // 更新进度条
+                    // 更新进度条 - 参考导入逻辑，直接使用接口返回的progress值
                     const progressBar = document.getElementById('exportProgressBar');
                     const progressText = document.getElementById('exportProgressText');
                     const progressInfo = document.getElementById('exportProgressInfo');
                     
+                    // 直接使用后端返回的progress值，不做额外计算（参考导入逻辑）
                     progressBar.style.width = `${task.progress}%`;
                     progressBar.textContent = `${task.progress}%`;
                     
+                    // 更新记录数显示
                     if (task.totalRecords > 0) {
                         progressText.textContent = `${task.processedRecords} / ${task.totalRecords} 条记录`;
                     }
@@ -1452,6 +1454,8 @@
                     // 根据任务状态更新UI
                     if (task.status === 'completed') {
                         clearInterval(exportProgressInterval);
+                        progressBar.style.width = '100%';
+                        progressBar.textContent = '100%';
                         progressInfo.textContent = '导出完成！';
                         document.getElementById('exportProgressActions').style.display = 'flex';
                         document.getElementById('downloadExportBtn').style.display = 'block';
@@ -1473,7 +1477,7 @@
                     document.getElementById('exportProgressActions').style.display = 'flex';
                     document.querySelector('.export-btn').disabled = false;
                 }
-            }, 500); // 每500ms轮询一次
+            }, 2000); // 每2秒轮询一次
         }
 
         async function downloadExportFile() {

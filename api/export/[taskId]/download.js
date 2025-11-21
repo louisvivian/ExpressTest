@@ -93,7 +93,7 @@ module.exports = async (req, res) => {
         }
         
         // 查询任务
-        const task = taskManager.getTask(taskId);
+        const task = await taskManager.getTask(taskId);
 
         if (!task) {
             return res.status(404).json({ error: '任务不存在' });
