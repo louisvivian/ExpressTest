@@ -44,22 +44,29 @@ class ExportTaskManager {
         // 确保 Prisma Client 已准备好
         this._ensurePrismaReady();
         
+        // 检查是否有 executeWithRetry 方法
+        if (!prisma.executeWithRetry) {
+            throw new Error('prisma.executeWithRetry 方法不可用');
+        }
+        
         const taskId = `export_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         
-        const task = await prisma.exportTask.create({
-            data: {
-                taskId,
-                status: 'pending', // pending, processing, completed, failed
-                progress: 0,
-                format,
-                searchName,
-                fileName: null,
-                filePath: null,
-                error: null,
-                totalRecords: 0,
-                processedRecords: 0
-            }
-        });
+        await prisma.executeWithRetry((p) => 
+            p.exportTask.create({
+                data: {
+                    taskId,
+                    status: 'pending', // pending, processing, completed, failed
+                    progress: 0,
+                    format,
+                    searchName,
+                    fileName: null,
+                    filePath: null,
+                    error: null,
+                    totalRecords: 0,
+                    processedRecords: 0
+                }
+            })
+        );
         
         return taskId;
     }
@@ -70,9 +77,16 @@ class ExportTaskManager {
     async getTask(taskId) {
         this._ensurePrismaReady();
         
-        const task = await prisma.exportTask.findUnique({
-            where: { taskId }
-        });
+        // 检查是否有 executeWithRetry 方法
+        if (!prisma.executeWithRetry) {
+            throw new Error('prisma.executeWithRetry 方法不可用');
+        }
+        
+        const task = await prisma.executeWithRetry((p) => 
+            p.exportTask.findUnique({
+                where: { taskId }
+            })
+        );
         
         if (!task) {
             return null;
@@ -109,15 +123,23 @@ class ExportTaskManager {
         }
         
         try {
+            // 检查是否有 executeWithRetry 方法
+            if (!prisma.executeWithRetry) {
+                console.error(`[任务管理器] updateTask: prisma.executeWithRetry 不存在`);
+                throw new Error('prisma.executeWithRetry 方法不可用');
+            }
+            
             // 如果明确指定了 progress，优先使用指定的值
             // 否则，如果更新了 processedRecords 或 totalRecords，自动计算进度百分比
             if (updates.progress === undefined && 
                 (updates.processedRecords !== undefined || updates.totalRecords !== undefined)) {
                 console.log(`[任务管理器] updateTask: 需要查询当前任务以计算进度`);
-                const currentTask = await prisma.exportTask.findUnique({
-                    where: { taskId },
-                    select: { totalRecords: true, processedRecords: true }
-                });
+                const currentTask = await prisma.executeWithRetry((p) => 
+                    p.exportTask.findUnique({
+                        where: { taskId },
+                        select: { totalRecords: true, processedRecords: true }
+                    })
+                );
                 console.log(`[任务管理器] updateTask: 当前任务查询完成`, currentTask);
                 
                 const totalRecords = updates.totalRecords !== undefined 
@@ -134,10 +156,12 @@ class ExportTaskManager {
             }
             
             console.log(`[任务管理器] updateTask: 准备更新数据库，taskId=${taskId}`);
-            const task = await prisma.exportTask.update({
-                where: { taskId },
-                data: updates
-            });
+            const task = await prisma.executeWithRetry((p) => 
+                p.exportTask.update({
+                    where: { taskId },
+                    data: updates
+                })
+            );
             console.log(`[任务管理器] updateTask: 数据库更新成功`);
             
             // 转换为普通对象，保持向后兼容
@@ -171,15 +195,22 @@ class ExportTaskManager {
     async cleanupExpiredTasks() {
         this._ensurePrismaReady();
         
+        // 检查是否有 executeWithRetry 方法
+        if (!prisma.executeWithRetry) {
+            throw new Error('prisma.executeWithRetry 方法不可用');
+        }
+        
         const expireTime = new Date(Date.now() - 24 * 60 * 60 * 1000); // 24小时前
         
-        await prisma.exportTask.deleteMany({
-            where: {
-                createdAt: {
-                    lt: expireTime
+        await prisma.executeWithRetry((p) => 
+            p.exportTask.deleteMany({
+                where: {
+                    createdAt: {
+                        lt: expireTime
+                    }
                 }
-            }
-        });
+            })
+        );
     }
 
     /**
