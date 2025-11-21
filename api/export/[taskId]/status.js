@@ -12,8 +12,29 @@ module.exports = async (req, res) => {
             return res.status(405).json({ error: '方法不允许' });
         }
         
-        // 提取 taskId
-        const taskId = extractTaskId(req, 'export', 'status');
+        // 在 Vercel 中，动态路由参数可能通过多种方式传递
+        // 1. req.query.taskId (Vercel 会将 [taskId] 映射到 query.taskId)
+        // 2. 从 URL 路径中解析
+        let taskId = null;
+        
+        // 方法1: 从 Vercel 的查询参数获取（Vercel 会将动态路由参数放在 query 中）
+        if (req.query && req.query.taskId) {
+            taskId = req.query.taskId;
+        }
+        
+        // 方法2: 从 URL 路径中提取
+        if (!taskId) {
+            taskId = extractTaskId(req, 'export', 'status');
+        }
+        
+        // 方法3: 如果还是没有，尝试从 req.url 直接解析
+        if (!taskId && req.url) {
+            // 匹配 /api/export/{taskId}/status 格式
+            const match = req.url.match(/\/api\/export\/([^\/\?]+)\/status/);
+            if (match && match[1]) {
+                taskId = match[1];
+            }
+        }
         
         if (!taskId) {
             // 记录调试信息
