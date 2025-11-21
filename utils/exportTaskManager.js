@@ -8,9 +8,31 @@ const prisma = require('../prisma/client');
 
 class ExportTaskManager {
     /**
+     * 确保 Prisma Client 已正确初始化
+     */
+    _ensurePrismaReady() {
+        if (!prisma) {
+            throw new Error('Prisma Client 未初始化。请检查 prisma/client.js 是否正确导出');
+        }
+        if (!prisma.exportTask) {
+            const availableModels = Object.keys(prisma).filter(key => 
+                !key.startsWith('$') && typeof prisma[key] === 'object' && prisma[key] !== null
+            );
+            throw new Error(
+                `Prisma Client 中未找到 exportTask 模型。` +
+                `可用模型: ${availableModels.length > 0 ? availableModels.join(', ') : '无'}. ` +
+                `请确保已运行 "prisma generate" 并且 schema.prisma 中包含 ExportTask 模型定义。`
+            );
+        }
+    }
+
+    /**
      * 创建新任务
      */
     async createTask(format, searchName = null) {
+        // 确保 Prisma Client 已准备好
+        this._ensurePrismaReady();
+        
         const taskId = `export_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         
         const task = await prisma.exportTask.create({
@@ -35,6 +57,8 @@ class ExportTaskManager {
      * 获取任务信息
      */
     async getTask(taskId) {
+        this._ensurePrismaReady();
+        
         const task = await prisma.exportTask.findUnique({
             where: { taskId }
         });
@@ -63,6 +87,8 @@ class ExportTaskManager {
      * 更新任务状态
      */
     async updateTask(taskId, updates) {
+        this._ensurePrismaReady();
+        
         // 如果明确指定了 progress，优先使用指定的值
         // 否则，如果更新了 processedRecords 或 totalRecords，自动计算进度百分比
         if (updates.progress === undefined && 
@@ -109,6 +135,8 @@ class ExportTaskManager {
      * 清理过期任务（24小时）
      */
     async cleanupExpiredTasks() {
+        this._ensurePrismaReady();
+        
         const expireTime = new Date(Date.now() - 24 * 60 * 60 * 1000); // 24小时前
         
         await prisma.exportTask.deleteMany({
