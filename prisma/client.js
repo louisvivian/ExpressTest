@@ -145,19 +145,13 @@ async function handlePreparedStatementError() {
 
 // 带重试的查询执行函数（用于处理 prepared statement 错误）
 async function executeWithRetry(queryFn, maxRetries = 1) {
-  console.log('[executeWithRetry] 函数被调用，maxRetries=', maxRetries);
   let lastError;
   
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      console.log(`[executeWithRetry] 尝试 ${attempt + 1}/${maxRetries + 1}`);
       const prisma = getPrismaClient();
-      console.log(`[executeWithRetry] Prisma Client 已获取，准备执行查询函数...`);
-      const result = await queryFn(prisma);
-      console.log(`[executeWithRetry] 查询执行成功`);
-      return result;
+      return await queryFn(prisma);
     } catch (error) {
-      console.error(`[executeWithRetry] 查询执行失败 (尝试 ${attempt + 1}):`, error.message);
       lastError = error;
       
       // 检查是否是 prepared statement 错误
