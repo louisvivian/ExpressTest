@@ -1676,13 +1676,19 @@
                 if (!response.ok) {
                     let errorMessage = '导入失败';
                     try {
-                        const error = await response.json();
-                        errorMessage = error.error || error.details || errorMessage;
-                        console.error('服务器错误:', error);
-                    } catch (parseError) {
+                        // 先尝试获取响应文本，然后尝试解析 JSON
                         const text = await response.text();
                         console.error('响应文本:', text);
-                        errorMessage = `服务器错误 (${response.status}): ${text || response.statusText}`;
+                        try {
+                            const error = JSON.parse(text);
+                            errorMessage = error.error || error.details || errorMessage;
+                        } catch (parseError) {
+                            // 如果不是 JSON，直接使用文本
+                            errorMessage = `服务器错误 (${response.status}): ${text || response.statusText}`;
+                        }
+                    } catch (readError) {
+                        // 如果读取失败，使用状态文本
+                        errorMessage = `服务器错误 (${response.status}): ${response.statusText}`;
                     }
                     throw new Error(errorMessage);
                 }
