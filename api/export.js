@@ -23,10 +23,9 @@ server.post('/', async (req, res) => {
         const taskId = await taskManager.createTask(format.toLowerCase(), searchName);
         console.log(`导出任务已创建: ${taskId}, 格式: ${format}, 搜索名称: ${searchName || '无'}`);
         
-        // 在响应返回前，先启动导出任务
-        // 在 Vercel 中，我们需要确保任务至少开始执行
+        // 启动导出任务（不等待完成）
         // 使用立即执行的 async IIFE 并添加错误处理
-        (async () => {
+        const exportPromise = (async () => {
             try {
                 console.log(`[${taskId}] 开始执行导出任务...`);
                 const result = await exportUsers(prisma, format.toLowerCase(), searchName, taskId);
@@ -45,12 +44,52 @@ server.post('/', async (req, res) => {
                     console.error(`[${taskId}] 更新任务状态失败:`, updateError);
                 }
             }
-        })().catch(err => {
-            // 捕获未处理的 Promise 拒绝
+        })();
+        
+        // 捕获未处理的 Promise 拒绝
+        exportPromise.catch(err => {
             console.error(`[${taskId}] 导出任务 Promise 未捕获的错误:`, err);
         });
 
-        // 立即返回响应，不等待任务完成
+        // 等待任务至少开始执行并更新状态为 processing
+        // 这样可以确保在 Vercel 函数返回前，任务已经开始处理
+        // 轮询检查任务状态，最多等待2秒
+        let taskStarted = false;
+        const maxWaitTime = 2000; // 2秒
+        const checkInterval = 100; // 每100ms检查一次
+        const startTime = Date.now();
+        
+        while (!taskStarted && (Date.now() - startTime) < maxWaitTime) {
+            try {
+                const task = await taskManager.getTask(taskId);
+                if (task && task.status === 'processing') {
+                    taskStarted = true;
+                    console.log(`[${taskId}] 任务已开始处理，状态已更新为 processing`);
+                    break;
+                }
+            } catch (checkError) {
+                console.error(`[${taskId}] 检查任务状态时出错:`, checkError);
+            }
+            
+            // 等待一段时间后再次检查
+            await new Promise(resolve => setTimeout(resolve, checkInterval));
+        }
+        
+        if (!taskStarted) {
+            console.warn(`[${taskId}] 等待超时，任务可能尚未开始处理，但已启动异步任务`);
+            // 即使超时，也尝试手动更新一次状态，确保任务至少被标记为 processing
+            try {
+                await taskManager.updateTask(taskId, {
+                    status: 'processing',
+                    progress: 1
+                });
+                console.log(`[${taskId}] 手动更新任务状态为 processing`);
+            } catch (manualUpdateError) {
+                console.error(`[${taskId}] 手动更新任务状态失败:`, manualUpdateError);
+            }
+        }
+
+        // 返回响应
         // 在 Vercel 中，函数会继续执行直到完成或超时（最多 60 秒）
         res.json({
             taskId,
